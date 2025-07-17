@@ -208,9 +208,10 @@ class AntaresBackendTester:
                 if response.status_code == 200:
                     tools = response.json()
                     expected_tools = [
-                        "blast", "alphafold", "mafft", "muscle", "swiss_model",
-                        "swiss_dock", "pymol", "chimera", "rosetta", "gromacs",
-                        "amber", "vmd", "bioreactor_sim"
+                        "blast", "alphafold", "interpro", "mafft", "muscle", 
+                        "swiss_dock", "swiss_model", "function_predictor", 
+                        "conservation_analyzer", "structure_validator", 
+                        "target_analyzer", "bioreactor_analyzer", "optimization_engine"
                     ]
                     
                     found_tools = 0
