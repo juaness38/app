@@ -51,14 +51,50 @@ class SQSDispatcher(ISQSDispatcher):
         """LUIS: Simula el envío a cola para desarrollo."""
         self.logger.info(f"[SIMULADO] Trabajo enviado a cola: {payload.context_id}")
         
-        # Simula procesamiento asíncrono
+        # Simula procesamiento asíncrono inmediato
         import asyncio
         asyncio.create_task(self._simulate_worker_processing(payload))
 
     async def _simulate_worker_processing(self, payload: JobPayload) -> None:
         """LUIS: Simula el procesamiento por un worker."""
-        await asyncio.sleep(2)  # Simula procesamiento
-        self.logger.info(f"[SIMULADO] Trabajo procesado: {payload.context_id}")
+        # Simula delay de procesamiento
+        await asyncio.sleep(1)
+        
+        # Simula procesamiento exitoso
+        self.logger.info(f"[SIMULADO] Trabajo procesado exitosamente: {payload.context_id}")
+        
+        # Simula actualización de contexto
+        try:
+            from src.api.dependencies import get_container
+            container = get_container()
+            
+            # Simula progreso
+            for progress in [25, 50, 75, 100]:
+                await asyncio.sleep(0.5)
+                await container.context_manager.update_progress(
+                    payload.context_id, 
+                    progress, 
+                    f"Procesando... {progress}%"
+                )
+            
+            # Simula finalización
+            results = {
+                "simulation": True,
+                "protocol_completed": True,
+                "tools_used": ["blast", "alphafold", "interpro"],
+                "findings": ["Análisis completado exitosamente en modo simulado"],
+                "confidence": 0.95
+            }
+            
+            await container.context_manager.set_results(payload.context_id, results)
+            await container.context_manager.mark_completed(payload.context_id)
+            
+        except Exception as e:
+            self.logger.error(f"Error en simulación de procesamiento: {e}")
+            try:
+                await container.context_manager.mark_failed(payload.context_id, str(e))
+            except:
+                pass
 
     async def get_queue_status(self) -> Dict[str, Any]:
         """LUIS: Obtiene el estado actual de la cola."""
