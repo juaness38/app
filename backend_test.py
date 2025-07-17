@@ -125,7 +125,7 @@ class AntaresBackendTester:
     async def test_health_endpoints(self) -> bool:
         """Test health check endpoints"""
         health_endpoints = [
-            ("/api/health", "Basic Health Check"),
+            ("/api/health/", "Basic Health Check"),
             ("/api/health/detailed", "Detailed Health Check"),
             ("/api/health/metrics", "Prometheus Metrics"),
             ("/api/health/capacity", "System Capacity"),
@@ -136,7 +136,7 @@ class AntaresBackendTester:
         
         for endpoint, test_name in health_endpoints:
             try:
-                async with httpx.AsyncClient(timeout=30.0) as client:
+                async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
                     response = await client.get(f"{self.backend_url}{endpoint}")
                     
                     if response.status_code == 200:
