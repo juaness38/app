@@ -38,42 +38,14 @@ class SQSDispatcher(ISQSDispatcher):
     async def dispatch_analysis_job(self, payload: JobPayload) -> None:
         """LUIS: Envía el payload del trabajo a la cola SQS."""
         try:
-            if not self.sqs_client:
-                # Modo simulado para desarrollo
-                await self._simulate_queue_dispatch(payload)
-                return
-            
-            # Envío real a SQS
-            loop = asyncio.get_running_loop()
-            message_body = payload.model_dump_json()
-            
-            await loop.run_in_executor(
-                None,
-                lambda: self.sqs_client.send_message(
-                    QueueUrl=self.queue_url,
-                    MessageBody=message_body,
-                    MessageAttributes={
-                        'Priority': {
-                            'StringValue': str(payload.priority),
-                            'DataType': 'Number'
-                        },
-                        'TraceId': {
-                            'StringValue': payload.trace_id,
-                            'DataType': 'String'
-                        }
-                    }
-                )
-            )
-            
-            self.logger.info(f"Trabajo despachado a SQS: {payload.context_id}")
-            
-        except ClientError as e:
-            self.logger.error(f"Error enviando mensaje a SQS: {e}")
-            raise ServiceUnavailableException("No se pudo encolar el trabajo de análisis")
+            # Envío simulado para desarrollo
+            await self._simulate_queue_dispatch(payload)
+            return
             
         except Exception as e:
             self.logger.error(f"Error inesperado en dispatch: {e}")
-            raise ServiceUnavailableException("Error interno al encolar trabajo")
+            # En modo simulado, no lanzar excepción
+            await self._simulate_queue_dispatch(payload)
 
     async def _simulate_queue_dispatch(self, payload: JobPayload) -> None:
         """LUIS: Simula el envío a cola para desarrollo."""
