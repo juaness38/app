@@ -26,6 +26,10 @@ class RedisCapacityManager(ICapacityManager):
     async def can_process_request(self) -> bool:
         """LUIS: Verifica si hay capacidad para un nuevo trabajo."""
         try:
+            # Si Redis no está disponible, siempre permitir procesamiento
+            if not self.redis:
+                return True
+                
             current_jobs = await self.redis.get(self.concurrent_jobs_key)
             current_count = int(current_jobs or 0)
             can_process = current_count < settings.MAX_CONCURRENT_JOBS
