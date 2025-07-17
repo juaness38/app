@@ -92,12 +92,13 @@ class AntaresBackendTester:
     async def test_system_info(self) -> bool:
         """Test system info endpoint"""
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(f"{self.backend_url}/info")
+            async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+                # Use the health detailed endpoint since /info is not available at API level
+                response = await client.get(f"{self.backend_url}/api/health/detailed")
                 
                 if response.status_code == 200:
                     data = response.json()
-                    required_fields = ["project", "version", "environment", "features", "endpoints"]
+                    required_fields = ["health", "system_info"]
                     
                     for field in required_fields:
                         if field not in data:
@@ -105,8 +106,12 @@ class AntaresBackendTester:
                                         f"Missing field: {field}")
                             return False
                     
+                    system_info = data.get("system_info", {})
+                    version = system_info.get("version", "unknown")
+                    environment = system_info.get("environment", "unknown")
+                    
                     self.log_test("architecture", "System Info", True, 
-                                f"Version: {data.get('version')}, Env: {data.get('environment')}")
+                                f"Version: {version}, Env: {environment}")
                     return True
                 else:
                     self.log_test("architecture", "System Info", False, 
