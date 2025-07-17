@@ -5,7 +5,7 @@ LUIS: Gestor del contexto de análisis. El cuaderno de laboratorio.
 """
 import logging
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.services.interfaces import IContextManager
 from src.models.analysis import AnalysisRequest, AnalysisContext, AnalysisStatus
