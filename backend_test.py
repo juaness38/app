@@ -71,13 +71,14 @@ class AntaresBackendTester:
     async def test_basic_connectivity(self) -> bool:
         """Test basic connectivity to backend"""
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(f"{self.backend_url}/")
+            async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+                # Test the health endpoint instead of root since root returns frontend
+                response = await client.get(f"{self.backend_url}/api/health/")
                 
                 if response.status_code == 200:
                     data = response.json()
                     self.log_test("architecture", "Basic Connectivity", True, 
-                                f"Backend responding: {data.get('message', 'OK')}")
+                                f"Backend responding: {data.get('status', 'OK')}")
                     return True
                 else:
                     self.log_test("architecture", "Basic Connectivity", False, 
