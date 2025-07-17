@@ -9,7 +9,7 @@ from typing import Dict, Any
 from src.services.interfaces import (
     IAnalysisWorker, IDriverIA, IContextManager, ICapacityManager, IEventStore
 )
-from src.models.analysis import JobPayload, AnalysisStatus, EventStoreEntry
+from src.models.analysis import JobPayload, AnalysisStatus, EventStoreEntry, AnalysisRequest
 from src.core.exceptions import AnalysisNotFoundException, DriverIAException
 
 class AnalysisWorker(IAnalysisWorker):
