@@ -135,6 +135,30 @@ class AppContainer:
         
         self.logger.info("Orquestador inicializado")
 
+    def _init_pipeline_services(self):
+        """LUIS: Inicializa servicios específicos del pipeline."""
+        from src.services.bioinformatics.blast_service import LocalBlastService
+        from src.services.bioinformatics.uniprot_service import UniProtService
+        
+        # Servicios bioinformáticos
+        self.blast_service: IBlastService = LocalBlastService(self.circuit_breaker_factory)
+        self.uniprot_service: IUniProtService = UniProtService(self.circuit_breaker_factory)
+        
+        self.logger.info("Servicios del pipeline inicializados")
+
+    def _init_scientific_pipeline(self):
+        """LUIS: Inicializa el pipeline científico principal."""
+        from src.core.pipeline import ScientificPipeline
+        
+        self.pipeline_service: IPipelineService = ScientificPipeline(
+            self.blast_service,
+            self.uniprot_service,
+            self.driver_ia,  # También funciona como ILLMService
+            self.circuit_breaker_factory
+        )
+        
+        self.logger.info("Pipeline científico inicializado")
+
     def _init_analysis_worker(self):
         """LUIS: Inicializa el worker de análisis."""
         self.analysis_worker: IAnalysisWorker = AnalysisWorker(
