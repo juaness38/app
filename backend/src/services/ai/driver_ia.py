@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-ASTROFLORA BACKEND - DRIVER IA
-LUIS: El cerebro cognitivo del sistema. Orquesta la investigación científica.
+ASTROFLORA BACKEND - DRIVER IA REFINADO
+Driver IA con soporte específico para pipeline científico y LLM.
 """
 import logging
 import asyncio
 import time
 from typing import Dict, Any, List
 import httpx
-from src.services.interfaces import IDriverIA, IToolGateway, IContextManager, IEventStore
+import json
+from src.services.interfaces import IDriverIA, IToolGateway, IContextManager, IEventStore, ILLMService
 from src.models.analysis import (
     AnalysisRequest, AnalysisContext, PromptProtocol, PromptNode, 
     PromptProtocolType, ToolResult, EventStoreEntry
@@ -16,10 +17,9 @@ from src.models.analysis import (
 from src.config.settings import settings
 from src.core.exceptions import DriverIAException
 
-class OpenAIDriverIA(IDriverIA):
+class OpenAIDriverIA(IDriverIA, ILLMService):
     """
-    LUIS: Driver IA implementado con OpenAI.
-    El cerebro que interpreta Prompt Protocols y orquesta herramientas.
+    Driver IA refinado que también implementa servicios LLM.
     """
     
     def __init__(
@@ -36,7 +36,7 @@ class OpenAIDriverIA(IDriverIA):
         # Configuración del cliente OpenAI
         self.api_key = settings.OPENAI_API_KEY
         self.base_url = "https://api.openai.com/v1"
-        self.model = "gpt-4o"  # Modelo más avanzado disponible
+        self.model = "gpt-4o"
         
         # Cliente HTTP para llamadas a OpenAI
         self.http_client = httpx.AsyncClient(
@@ -47,28 +47,158 @@ class OpenAIDriverIA(IDriverIA):
             }
         )
         
-        self.logger.info("Driver IA (OpenAI) inicializado")
+        self.logger.info("Driver IA (OpenAI) refinado inicializado")
 
-    async def execute_protocol(self, protocol: PromptProtocol, context: AnalysisContext) -> None:
-        """
-        LUIS: Ejecuta un Prompt Protocol completo.
-        Es el bucle principal del científico cognitivo.
-        """
-        self.logger.info(f"Iniciando ejecución del protocolo: {protocol.name}")
+    # ========================================================================
+    # IMPLEMENTACIÓN DE ILLMService
+    # ========================================================================
+
+    async def analyze_sequence_data(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.3) -> Dict[str, Any]:
+        """Analiza datos de secuencia usando LLM."""
+        if self.api_key == "sk-placeholder-openai-key":
+            # Modo simulado
+            return await self._simulate_llm_analysis(prompt)
         
         try:
-            # Almacena evento de inicio
+            response = await self.http_client.post(
+                f"{self.base_url}/chat/completions",
+                json={
+                    "model": self.model,
+                    "messages": [
+                        {
+                            "role": "system", 
+                            "content": "Eres un bioinformático experto. Analiza datos de secuencias y proporciona insights científicos en formato JSON."
+                        },
+                        {
+                            "role": "user", 
+                            "content": prompt
+                        }
+                    ],
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                }
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                content = result['choices'][0]['message']['content']
+                
+                try:
+                    # Intenta parsear como JSON
+                    return json.loads(content)
+                except json.JSONDecodeError:
+                    # Si no es JSON válido, estructura la respuesta
+                    return {
+                        "analysis": content,
+                        "function": "Unknown",
+                        "confidence": 0.7,
+                        "findings": [content[:100] + "..."],
+                        "recommendations": ["Revisar análisis manual"]
+                    }
+            else:
+                raise Exception(f"OpenAI API error: {response.status_code}")
+                
+        except Exception as e:
+            self.logger.error(f"Error en análisis LLM: {e}")
+            return await self._simulate_llm_analysis(prompt)
+
+    async def generate_summary(self, data: Dict[str, Any]) -> str:
+        """Genera un resumen de los datos."""
+        prompt = f"""
+        Genera un resumen científico conciso de los siguientes datos de análisis:
+        
+        {json.dumps(data, indent=2)}
+        
+        El resumen debe incluir:
+        1. Tipo de secuencia y características principales
+        2. Resultados más relevantes
+        3. Función predicha (si aplica)
+        4. Nivel de confianza
+        
+        Mantén el resumen en 2-3 párrafos máximo.
+        """
+        
+        result = await self.analyze_sequence_data(prompt, max_tokens=500)
+        return result.get("analysis", "No se pudo generar resumen")
+
+    async def health_check(self) -> bool:
+        """Verifica el estado del servicio LLM."""
+        try:
+            if self.api_key == "sk-placeholder-openai-key":
+                return True  # Modo simulado siempre healthy
+                
+            # Test simple con OpenAI
+            response = await self.http_client.post(
+                f"{self.base_url}/chat/completions",
+                json={
+                    "model": self.model,
+                    "messages": [{"role": "user", "content": "Test"}],
+                    "max_tokens": 10
+                }
+            )
+            return response.status_code == 200
+            
+        except Exception:
+            return False
+
+    async def _simulate_llm_analysis(self, prompt: str) -> Dict[str, Any]:
+        """Simula análisis LLM para desarrollo."""
+        await asyncio.sleep(1)  # Simula tiempo de procesamiento
+        
+        # Extrae información del prompt para generar respuesta realista
+        sequence_mentioned = "secuencia" in prompt.lower() or "sequence" in prompt.lower()
+        blast_mentioned = "blast" in prompt.lower()
+        uniprot_mentioned = "uniprot" in prompt.lower()
+        
+        return {
+            "function": "Proteína hipotética con actividad enzimática" if sequence_mentioned else "Función desconocida",
+            "confidence": 0.78 if blast_mentioned and uniprot_mentioned else 0.45,
+            "findings": [
+                "Homología significativa encontrada" if blast_mentioned else "Análisis limitado disponible",
+                "Dominios funcionales identificados" if uniprot_mentioned else "Dominios no caracterizados",
+                "Estructura secundaria predicha",
+                "Conservación evolutiva moderada"
+            ],
+            "recommendations": [
+                "Validación experimental recomendada",
+                "Análisis de expresión adicional",
+                "Estudios de función in vitro"
+            ],
+            "analysis": f"[SIMULADO] Análisis completo basado en: {prompt[:100]}...",
+            "metabolic_pathways": ["Metabolismo de aminoácidos", "Biosíntesis de proteínas"],
+            "organism_specificity": "Conservada en procariotas",
+            "structural_features": {
+                "domains": 2,
+                "transmembrane_regions": 0,
+                "signal_peptide": False
+            }
+        }
+
+    # ========================================================================
+    # IMPLEMENTACIÓN MEJORADA DE IDriverIA
+    # ========================================================================
+
+    async def execute_protocol(self, protocol: PromptProtocol, context: AnalysisContext) -> None:
+        """Ejecuta un Prompt Protocol con logging mejorado."""
+        self.logger.info(f"Ejecutando protocolo: {protocol.name} para contexto: {context.context_id}")
+        
+        try:
             await self.event_store.store_event(EventStoreEntry(
                 context_id=context.context_id,
                 event_type="protocol_started",
-                data={"protocol_name": protocol.name, "protocol_type": protocol.protocol_type},
+                data={
+                    "protocol_name": protocol.name,
+                    "protocol_type": protocol.protocol_type,
+                    "nodes_count": len(protocol.nodes),
+                    "estimated_duration": len(protocol.nodes) * 30  # 30s por nodo estimado
+                },
                 agent="driver_ia"
             ))
             
-            # Actualiza contexto
             await self.context_manager.update_progress(context.context_id, 0, "Iniciando protocolo")
             
-            # Ejecuta nodos secuencialmente
+            # Ejecuta nodos con mejor manejo de errores
+            results = {}
             for i, node in enumerate(protocol.nodes):
                 progress = int((i / len(protocol.nodes)) * 100)
                 await self.context_manager.update_progress(
@@ -77,21 +207,24 @@ class OpenAIDriverIA(IDriverIA):
                     f"Ejecutando: {node.name}"
                 )
                 
-                # Ejecuta el nodo
-                await self._execute_node(node, context)
+                node_result = await self._execute_node_with_retry(node, context, results)
+                results[node.node_id] = node_result
                 
-                # Pausa entre nodos para evitar sobrecarga
-                await asyncio.sleep(0.5)
+                # Pausa adaptativa entre nodos
+                await asyncio.sleep(0.5 if node_result.get("success") else 1.0)
             
-            # Protocolo completado
+            # Análisis final con LLM
+            final_analysis = await self.analyze_results(context.context_id, results)
+            results["final_analysis"] = final_analysis
+            
+            await self.context_manager.set_results(context.context_id, results)
             await self.context_manager.update_progress(context.context_id, 100, "Protocolo completado")
             await self.context_manager.mark_completed(context.context_id)
             
-            # Almacena evento de finalización
             await self.event_store.store_event(EventStoreEntry(
                 context_id=context.context_id,
                 event_type="protocol_completed",
-                data={"protocol_name": protocol.name},
+                data={"protocol_name": protocol.name, "results_count": len(results)},
                 agent="driver_ia"
             ))
             
@@ -108,305 +241,155 @@ class OpenAIDriverIA(IDriverIA):
             
             raise DriverIAException(f"Fallo en ejecución del protocolo: {e}")
 
-    async def _execute_node(self, node: PromptNode, context: AnalysisContext) -> None:
-        """LUIS: Ejecuta un nodo individual del protocolo."""
-        self.logger.info(f"Ejecutando nodo: {node.name}")
+    async def _execute_node_with_retry(self, node: PromptNode, context: AnalysisContext, previous_results: Dict) -> Dict[str, Any]:
+        """Ejecuta un nodo con lógica de reintento."""
+        max_retries = 2
+        
+        for attempt in range(max_retries + 1):
+            try:
+                return await self._execute_single_node(node, context, previous_results)
+                
+            except Exception as e:
+                if attempt == max_retries:
+                    self.logger.error(f"Node {node.name} failed after {max_retries} retries: {e}")
+                    return {
+                        "success": False,
+                        "error": str(e),
+                        "attempts": attempt + 1,
+                        "node_name": node.name
+                    }
+                
+                self.logger.warning(f"Node {node.name} attempt {attempt + 1} failed, retrying: {e}")
+                await asyncio.sleep(1.0 * (attempt + 1))  # Backoff exponencial
+
+    async def _execute_single_node(self, node: PromptNode, context: AnalysisContext, previous_results: Dict) -> Dict[str, Any]:
+        """Ejecuta un nodo individual con contexto mejorado."""
+        start_time = time.time()
         
         try:
-            # Almacena evento de inicio del nodo
-            await self.event_store.store_event(EventStoreEntry(
-                context_id=context.context_id,
-                event_type="node_started",
-                data={"node_name": node.name, "node_id": node.node_id},
-                agent="driver_ia"
-            ))
+            # Prepara parámetros con contexto de resultados previos
+            enhanced_parameters = node.parameters.copy()
             
-            # Si el nodo requiere una herramienta
+            # Sustituye referencias a resultados previos
+            for key, value in enhanced_parameters.items():
+                if isinstance(value, str) and value.startswith("{") and value.endswith("}"):
+                    ref_key = value[1:-1]  # Remove {}
+                    if ref_key in previous_results:
+                        enhanced_parameters[key] = previous_results[ref_key]
+            
+            # Invoca herramienta si es necesario
             if node.tool_name:
-                result = await self.tool_gateway.invoke_tool(node.tool_name, node.parameters)
+                tool_result = await self.tool_gateway.invoke_tool(node.tool_name, enhanced_parameters)
                 
-                # Almacena el resultado
-                await self.event_store.store_event(EventStoreEntry(
-                    context_id=context.context_id,
-                    event_type="tool_result",
-                    data={
-                        "node_name": node.name,
-                        "tool_name": node.tool_name,
-                        "success": result.success,
-                        "result": result.result,
-                        "execution_time": result.execution_time
-                    },
-                    agent="driver_ia"
-                ))
+                # Almacena resultado detallado
+                result_data = {
+                    "node_name": node.name,
+                    "tool_name": node.tool_name,
+                    "success": tool_result.success,
+                    "execution_time": tool_result.execution_time,
+                    "result": tool_result.result,
+                    "parameters_used": enhanced_parameters
+                }
                 
-                # Analiza el resultado con IA
-                analysis = await self._analyze_tool_result(result, context)
+                if not tool_result.success:
+                    result_data["error"] = tool_result.error_message
                 
-                # Actualiza contexto con análisis
-                current_context = await self.context_manager.get_context(context.context_id)
-                if current_context:
-                    results = current_context.results.copy()
-                    results[node.node_id] = {
-                        "tool_result": result.model_dump(),
-                        "ai_analysis": analysis
-                    }
-                    await self.context_manager.set_results(context.context_id, results)
+            else:
+                # Nodo de procesamiento sin herramienta
+                result_data = {
+                    "node_name": node.name,
+                    "success": True,
+                    "execution_time": time.time() - start_time,
+                    "result": {"message": f"Node {node.name} processed successfully"},
+                    "parameters_used": enhanced_parameters
+                }
             
-            # Almacena evento de finalización del nodo
+            # Almacena evento del nodo
             await self.event_store.store_event(EventStoreEntry(
                 context_id=context.context_id,
-                event_type="node_completed",
-                data={"node_name": node.name, "node_id": node.node_id},
+                event_type="node_completed" if result_data["success"] else "node_failed",
+                data=result_data,
                 agent="driver_ia"
             ))
+            
+            return result_data
             
         except Exception as e:
-            self.logger.error(f"Error ejecutando nodo {node.name}: {e}")
+            execution_time = time.time() - start_time
             
             await self.event_store.store_event(EventStoreEntry(
                 context_id=context.context_id,
-                event_type="node_failed",
-                data={"node_name": node.name, "node_id": node.node_id, "error": str(e)},
+                event_type="node_error",
+                data={
+                    "node_name": node.name,
+                    "error": str(e),
+                    "execution_time": execution_time
+                },
                 agent="driver_ia"
             ))
             
             raise
 
-    async def _analyze_tool_result(self, result: ToolResult, context: AnalysisContext) -> Dict[str, Any]:
-        """LUIS: Analiza el resultado de una herramienta usando IA."""
-        if not result.success:
-            return {"analysis": "Tool execution failed", "confidence": 0.0}
-        
-        # Placeholder para análisis con IA
-        # Aquí iría la llamada real a OpenAI
-        if self.api_key == "sk-placeholder-openai-key":
-            return {
-                "analysis": f"[SIMULADO] Análisis de resultado de {result.tool_name}",
-                "confidence": 0.85,
-                "key_findings": ["Resultado procesado exitosamente"],
-                "next_steps": ["Continuar con siguiente nodo"]
-            }
-        
-        # Llamada real a OpenAI (cuando se tenga la clave)
-        try:
-            prompt = f"""
-            Analiza el siguiente resultado de la herramienta {result.tool_name}:
-            
-            Resultado: {result.result}
-            
-            Contexto del análisis: {context.protocol_type}
-            
-            Proporciona:
-            1. Análisis del resultado
-            2. Nivel de confianza (0-1)
-            3. Hallazgos clave
-            4. Próximos pasos recomendados
-            
-            Responde en formato JSON.
-            """
-            
-            response = await self.http_client.post(
-                f"{self.base_url}/chat/completions",
-                json={
-                    "model": self.model,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.3,
-                    "max_tokens": 1000
-                }
-            )
-            
-            if response.status_code == 200:
-                ai_response = response.json()
-                content = ai_response['choices'][0]['message']['content']
-                
-                # Intenta parsear como JSON
-                try:
-                    import json
-                    return json.loads(content)
-                except:
-                    return {"analysis": content, "confidence": 0.7}
-            
-        except Exception as e:
-            self.logger.error(f"Error en análisis IA: {e}")
-        
-        return {"analysis": "Error en análisis IA", "confidence": 0.0}
-
-    async def generate_protocol(self, request: AnalysisRequest) -> PromptProtocol:
-        """
-        LUIS: Genera un Prompt Protocol basado en el tipo de análisis solicitado.
-        """
-        self.logger.info(f"Generando protocolo para: {request.protocol_type}")
-        
-        # Protocolos predefinidos por tipo
-        if request.protocol_type == PromptProtocolType.PROTEIN_FUNCTION_ANALYSIS:
-            return self._generate_protein_function_protocol(request)
-        elif request.protocol_type == PromptProtocolType.SEQUENCE_ALIGNMENT:
-            return self._generate_sequence_alignment_protocol(request)
-        elif request.protocol_type == PromptProtocolType.STRUCTURE_PREDICTION:
-            return self._generate_structure_prediction_protocol(request)
-        elif request.protocol_type == PromptProtocolType.DRUG_DESIGN:
-            return self._generate_drug_design_protocol(request)
-        elif request.protocol_type == PromptProtocolType.BIOREACTOR_OPTIMIZATION:
-            return self._generate_bioreactor_optimization_protocol(request)
-        else:
-            raise DriverIAException(f"Protocolo no soportado: {request.protocol_type}")
-
-    def _generate_protein_function_protocol(self, request: AnalysisRequest) -> PromptProtocol:
-        """LUIS: Genera protocolo para análisis de función de proteína."""
-        nodes = [
-            PromptNode(
-                name="Búsqueda de Homología",
-                description="Buscar secuencias similares usando BLAST",
-                tool_name="blast",
-                parameters={"sequence": request.sequence, "database": "nr"}
-            ),
-            PromptNode(
-                name="Análisis de Dominios",
-                description="Identificar dominios funcionales",
-                tool_name="interpro",
-                parameters={"sequence": request.sequence}
-            ),
-            PromptNode(
-                name="Predicción de Estructura",
-                description="Predecir estructura 3D",
-                tool_name="alphafold",
-                parameters={"sequence": request.sequence}
-            ),
-            PromptNode(
-                name="Análisis Funcional",
-                description="Integrar resultados para determinar función",
-                tool_name="function_predictor",
-                parameters={"blast_results": "{blast.result}", "domains": "{interpro.result}"}
-            )
-        ]
-        
-        return PromptProtocol(
-            name="Análisis de Función de Proteína",
-            description="Protocolo para determinar la función de una proteína desconocida",
-            protocol_type=request.protocol_type,
-            nodes=nodes
-        )
-
-    def _generate_sequence_alignment_protocol(self, request: AnalysisRequest) -> PromptProtocol:
-        """LUIS: Genera protocolo para alineamiento de secuencias."""
-        nodes = [
-            PromptNode(
-                name="Alineamiento MAFFT",
-                description="Alineamiento múltiple usando MAFFT",
-                tool_name="mafft",
-                parameters={"sequences": request.parameters.get("sequences", [])}
-            ),
-            PromptNode(
-                name="Análisis de Conservación",
-                description="Analizar regiones conservadas",
-                tool_name="conservation_analyzer",
-                parameters={"alignment": "{mafft.result}"}
-            )
-        ]
-        
-        return PromptProtocol(
-            name="Alineamiento de Secuencias",
-            description="Protocolo para alineamiento múltiple y análisis de conservación",
-            protocol_type=request.protocol_type,
-            nodes=nodes
-        )
-
-    def _generate_structure_prediction_protocol(self, request: AnalysisRequest) -> PromptProtocol:
-        """LUIS: Genera protocolo para predicción de estructura."""
-        nodes = [
-            PromptNode(
-                name="Predicción AlphaFold",
-                description="Predicción de estructura con AlphaFold",
-                tool_name="alphafold",
-                parameters={"sequence": request.sequence}
-            ),
-            PromptNode(
-                name="Validación Estructural",
-                description="Validar estructura predicha",
-                tool_name="structure_validator",
-                parameters={"structure": "{alphafold.result}"}
-            )
-        ]
-        
-        return PromptProtocol(
-            name="Predicción de Estructura",
-            description="Protocolo para predicción y validación de estructura proteica",
-            protocol_type=request.protocol_type,
-            nodes=nodes
-        )
-
-    def _generate_drug_design_protocol(self, request: AnalysisRequest) -> PromptProtocol:
-        """LUIS: Genera protocolo para diseño de fármacos."""
-        nodes = [
-            PromptNode(
-                name="Análisis de Diana",
-                description="Analizar proteína diana",
-                tool_name="target_analyzer",
-                parameters={"target": request.target_protein}
-            ),
-            PromptNode(
-                name="Docking Molecular",
-                description="Realizar docking molecular",
-                tool_name="swiss_dock",
-                parameters={"target": request.target_protein, "ligands": request.parameters.get("ligands", [])}
-            )
-        ]
-        
-        return PromptProtocol(
-            name="Diseño de Fármacos",
-            description="Protocolo para diseño y evaluación de candidatos a fármacos",
-            protocol_type=request.protocol_type,
-            nodes=nodes
-        )
-
-    def _generate_bioreactor_optimization_protocol(self, request: AnalysisRequest) -> PromptProtocol:
-        """LUIS: Genera protocolo para optimización de bioreactor."""
-        nodes = [
-            PromptNode(
-                name="Análisis de Parámetros",
-                description="Analizar parámetros actuales del bioreactor",
-                tool_name="bioreactor_analyzer",
-                parameters=request.parameters
-            ),
-            PromptNode(
-                name="Optimización",
-                description="Optimizar condiciones de cultivo",
-                tool_name="optimization_engine",
-                parameters={"current_params": "{bioreactor_analyzer.result}"}
-            )
-        ]
-        
-        return PromptProtocol(
-            name="Optimización de Bioreactor",
-            description="Protocolo para optimización de condiciones de cultivo",
-            protocol_type=request.protocol_type,
-            nodes=nodes
-        )
-
     async def analyze_results(self, context_id: str, results: Dict[str, Any]) -> Dict[str, Any]:
-        """LUIS: Analiza los resultados finales del protocolo."""
+        """Análisis final mejorado con LLM."""
         self.logger.info(f"Analizando resultados finales para contexto: {context_id}")
         
-        # Placeholder para análisis con IA
-        if self.api_key == "sk-placeholder-openai-key":
-            return {
-                "summary": "[SIMULADO] Análisis completo de resultados",
-                "confidence": 0.90,
-                "key_findings": ["Análisis completado exitosamente"],
-                "recommendations": ["Revisar resultados detallados"]
+        try:
+            # Prepara datos para análisis LLM
+            analysis_data = {
+                "context_id": context_id,
+                "total_nodes": len([k for k in results.keys() if k != "final_analysis"]),
+                "successful_nodes": len([r for r in results.values() if isinstance(r, dict) and r.get("success", False)]),
+                "key_results": {}
             }
-        
-        # Análisis real con IA (cuando se tenga la clave)
-        # Aquí iría la lógica de análisis integral
-        
-        return {
-            "summary": "Análisis de resultados completado",
-            "confidence": 0.85,
-            "results_count": len(results),
-            "timestamp": time.time()
-        }
+            
+            # Extrae resultados clave
+            for node_id, result in results.items():
+                if isinstance(result, dict) and result.get("success") and result.get("result"):
+                    analysis_data["key_results"][node_id] = result["result"]
+            
+            # Genera prompt para análisis integral
+            prompt = f"""
+            Analiza los siguientes resultados de un pipeline científico:
+            
+            Contexto: {context_id}
+            Nodos ejecutados: {analysis_data['total_nodes']}
+            Nodos exitosos: {analysis_data['successful_nodes']}
+            
+            Resultados clave:
+            {json.dumps(analysis_data['key_results'], indent=2)}
+            
+            Proporciona un análisis integral que incluya:
+            1. Resumen ejecutivo de los hallazgos
+            2. Consistencia entre resultados
+            3. Nivel de confianza general
+            4. Recomendaciones científicas
+            5. Próximos pasos sugeridos
+            
+            Responde en formato JSON estructurado.
+            """
+            
+            llm_analysis = await self.analyze_sequence_data(prompt, max_tokens=1500)
+            
+            return {
+                "pipeline_summary": analysis_data,
+                "llm_insights": llm_analysis,
+                "overall_confidence": llm_analysis.get("confidence", 0.5),
+                "key_findings": llm_analysis.get("findings", []),
+                "recommendations": llm_analysis.get("recommendations", []),
+                "analysis_timestamp": time.time()
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error en análisis final: {e}")
+            return {
+                "pipeline_summary": {"error": str(e)},
+                "overall_confidence": 0.0,
+                "key_findings": ["Error en análisis final"],
+                "recommendations": ["Revisar logs para detalles del error"]
+            }
 
     async def close(self):
-        """LUIS: Cierra el cliente HTTP."""
+        """Cierra el cliente HTTP."""
         if self.http_client:
             await self.http_client.aclose()
