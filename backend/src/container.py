@@ -51,8 +51,11 @@ class AppContainer:
         # Inicializa el orquestador principal
         self._init_orchestrator()
         
-        # Inicializa el worker de análisis
-        self._init_analysis_worker()
+        # Inicializa servicios específicos del pipeline
+        self._init_pipeline_services()
+        
+        # Inicializa el pipeline científico principal
+        self._init_scientific_pipeline()
         
         self.logger.info("AppContainer 'Antares' inicializado exitosamente")
 
