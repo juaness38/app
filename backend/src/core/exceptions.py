@@ -35,3 +35,7 @@ class CircuitBreakerOpenException(AstrofloraException):
 class CapacityExceededException(AstrofloraException):
     """LUIS: Cuando se excede la capacidad del sistema."""
     pass
+
+class PipelineException(AstrofloraException):
+    """LUIS: Errores en la ejecución del pipeline científico."""
+    pass
