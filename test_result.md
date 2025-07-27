@@ -173,29 +173,17 @@ backend:
         comment: "API completa migrada con autenticación por API key mejorada y endpoints de análisis, salud y herramientas funcionando"
 
 frontend:
-  - task: "Interfaz de usuario Antares"
+  - task: "Compatibilidad con backend migrado"
     implemented: true
     working: true
-    file: "src/App.js"
+    file: "frontend/src/App.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Interfaz React completa con formularios para análisis, visualización de herramientas y análisis recientes"
-
-  - task: "Integración con backend"
-    implemented: true
-    working: true
-    file: "src/App.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Integración completa con API backend, manejo de autenticación y estados de análisis"
+        comment: "Frontend mantiene compatibilidad completa con el backend migrado. Funciona correctamente con la nueva API de Astroflora Antares 5.0.0"
 
 metadata:
   created_by: "main_agent"
