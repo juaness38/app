@@ -159,6 +159,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Todos los servicios migrados: IA, bioinformáticos, resiliencia, ejecución, observabilidad con mejoras de la versión 5.0.0"
+      - working: true
+        agent: "testing"
+        comment: "✅ CONFIRMADO: Servicios funcionando correctamente. Contenedor de dependencias operativo, 13 herramientas bioinformáticas disponibles y saludables (blast, alphafold, mafft, etc.), circuit breakers funcionando, gestión de capacidad activa, métricas Prometheus disponibles, endpoints de mantenimiento operativos."
 
   - task: "API endpoints actualizados"
     implemented: true
