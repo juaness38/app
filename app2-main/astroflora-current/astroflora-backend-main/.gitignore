@@ -1,0 +1,75 @@
+# Entornos virtuales y entornos Python
+venv/
+.env/
+.venv/
+env/
+ENV/
+pythonenv/
+
+# Archivos de entorno (variables sensibles)
+.env
+.env.local
+.env.*.local
+secrets.ini
+
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Archivos de IDE/Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-workspace
+*.sublime-project
+
+# Archivos de Jupyter Notebook
+.ipynb_checkpoints
+
+# Logs y bases de datos locales
+*.log
+*.sqlite
+*.db
+
+# Directorios de datos y caché
+data/
+*.csv
+*.json
+*.parquet
+.cache/
+.pytest_cache/
+coverage.xml
+
+# FastAPI específico
+*.pyc
+uvicorn.log
+
+# Archivos de cobertura y tests
+htmlcov/
+.coverage
+.coverage.*
+
+# IA TOOLS
+CLAUDE.md

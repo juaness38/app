@@ -1,0 +1,37 @@
+# ASTROFLORA - REQUIREMENTS REFINADOS
+# Stack base
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Base de datos (PostgreSQL + Redis)
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+redis[hiredis]==5.2.1
+alembic==1.14.0
+
+# Autenticación y seguridad
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.20
+
+# HTTP y APIs externas
+httpx==0.28.1
+aiohttp==3.11.11
+
+# Análisis científico y bioinformática
+biopython==1.84
+numpy==2.2.1
+pandas==2.2.3
+
+# Resiliencia y monitoreo
+tenacity==9.0.0
+prometheus-client==0.21.1
+
+# Procesamiento de tareas
+celery[redis]==5.4.0
+
+# Utilidades
+python-dotenv==1.0.1
+structlog==24.4.0
