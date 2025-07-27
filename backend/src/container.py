@@ -57,6 +57,9 @@ class AppContainer:
         # Inicializa el pipeline científico principal
         self._init_scientific_pipeline()
         
+        # Inicializa el analysis worker
+        self._init_analysis_worker()
+        
         self.logger.info("AppContainer 'Antares' inicializado exitosamente")
 
     def _init_clients(self):
