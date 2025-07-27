@@ -193,14 +193,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Arquitectura completa de Antares implementada"
-    - "Driver IA funcionando con simulación"
-    - "Herramientas bioinformáticas integradas"
-    - "Frontend funcional con análisis en tiempo real"
+    - "Backend Astroflora Antares 5.0.0 migrado exitosamente"
+    - "API completa funcionando con autenticación mejorada"
+    - "13 herramientas bioinformáticas disponibles"
+    - "Frontend compatible con backend migrado"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Arquitectura completa de Antares implementada exitosamente. Sistema incluye: Driver IA con OpenAI, Orchestrator inteligente, Analysis Worker, Tool Gateway con 13 herramientas bioinformáticas (BLAST, AlphaFold, MAFFT, etc.), servicios de resiliencia con Circuit Breakers, métricas Prometheus, Context Manager, Event Store, y API completa. Frontend React funcional permite iniciar análisis de diferentes tipos de protocolos científicos. Sistema está funcionando en modo simulado listo para integración con claves API reales."
+    message: "✅ MIGRACIÓN EXITOSA: Backend completo de app2-main/app-main/backend/ reemplazado en app/backend/. Astroflora Antares 5.0.0 funcionando correctamente con configuración avanzada, servicios de IA mejorados, 13 herramientas bioinformáticas, API con autenticación robusta, y frontend completamente compatible. Sistema listo para continuar desarrollo."
