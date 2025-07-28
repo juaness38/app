@@ -60,7 +60,7 @@ class PipelineConfig(BaseModel):
     evalue_threshold: float = Field(1e-10, ge=0, description="E-value threshold")
     max_target_seqs: int = Field(500, ge=1, le=1000, description="Máximo secuencias objetivo")
     uniprot_fields: List[str] = Field(default_factory=lambda: ["function", "pathway"], description="Campos UniProt")
-    llm_analysis_depth: str = Field("detailed", regex="^(basic|detailed|comprehensive)$", description="Profundidad de análisis LLM")
+    llm_analysis_depth: str = Field("detailed", pattern="^(basic|detailed|comprehensive)$", description="Profundidad de análisis LLM")
     max_blast_hits: int = Field(50, ge=1, le=200, description="Máximo hits BLAST")
     llm_max_tokens: int = Field(1000, ge=100, le=4000, description="Máximo tokens LLM")
     uniprot_batch_size: int = Field(10, ge=1, le=50, description="Tamaño de lote UniProt")
