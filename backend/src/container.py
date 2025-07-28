@@ -147,8 +147,7 @@ class AppContainer:
         self.driver_ia: IDriverIA = OpenAIDriverIA(
             self.tool_gateway,
             self.context_manager,
-            self.event_store,
-            api_key=self.settings.OPENAI_API_KEY
+            self.event_store
         )
         
         # Actualiza la referencia del LLM service en el tool gateway
