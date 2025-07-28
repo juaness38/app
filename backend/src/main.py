@@ -252,6 +252,12 @@ app.include_router(
     tags=["🏥 Salud del Sistema"]
 )
 
+app.include_router(
+    agentic.router,
+    prefix="/api/agentic",
+    tags=["🤖 Endpoints Agénticos - Fase 1"]
+)
+
 # === ENDPOINTS PRINCIPALES ===
 
 @app.get("/", tags=["🚀 General"])
