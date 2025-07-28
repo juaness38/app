@@ -6,6 +6,7 @@ Driver IA con soporte específico para pipeline científico y LLM.
 import logging
 import asyncio
 import time
+from datetime import datetime
 from typing import Dict, Any, List
 import httpx
 import json
