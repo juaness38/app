@@ -14,7 +14,7 @@ from src.models.analysis import (
 from src.api.dependencies import get_container
 from src.container import AppContainer
 
-router = APIRouter(prefix="/api/agentic", tags=["Agentic Capabilities"])
+router = APIRouter(tags=["Agentic Capabilities"])
 
 # ============================================================================
 # MODELOS DE REQUEST/RESPONSE PARA ENDPOINTS AGÉNTICOS
