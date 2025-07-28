@@ -5,7 +5,8 @@ LUIS: Settings con validación avanzada y configuración robusta.
 """
 import os
 from typing import List
-from pydantic import BaseSettings, Field, validator
+from pydantic_settings import BaseSettings
+from pydantic import Field, validator
 
 class Settings(BaseSettings):
     """Configuración centralizada con validaciones."""
