@@ -167,3 +167,43 @@ class RedisCircuitBreaker(ICircuitBreaker):
                 "last_failure": None,
                 "is_open": False
             }
+class CircuitBreakerFactory:
+    """
+    LUIS: Factory para crear Circuit Breakers configurados.ç
+    Implementa el patrón Factory para generar instancias de CircuitBreaker.
+    """
+    
+    def __init__(self, redis_client: aioredis.Redis, failure_threshold: int, open_seconds: int):
+        """
+        Inicializa la factory con configuración compartida.
+        
+        Args:
+            redis_client: Cliente Redis para persistencia
+            failure_threshold: Número de fallos antes de abrir el circuito
+            open_seconds: Segundos que permanece abierto el circuito
+        """
+        self.redis_client = redis_client
+        self.failure_threshold = failure_threshold
+        self.open_seconds = open_seconds
+        self.logger = logging.getLogger(__name__)
+    
+    def create_circuit_breaker(self, service_name: str, metrics: IMetricsService) -> RedisCircuitBreaker:
+        """
+        Crea una nueva instancia de CircuitBreaker para un servicio.
+        
+        Args:
+            service_name: Nombre del servicio a proteger
+            metrics: Servicio de métricas para registrar eventos
+            
+        Returns:
+            Instancia configurada de RedisCircuitBreaker
+        """
+        self.logger.info(f"Creando Circuit Breaker para servicio: {service_name}")
+        
+        circuit_breaker = RedisCircuitBreaker(
+            service_name=service_name,
+            redis_client=self.redis_client,
+            metrics=metrics
+        )
+        
+        return circuit_breaker
