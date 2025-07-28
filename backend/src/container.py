@@ -95,8 +95,7 @@ class AppContainer:
     def _init_data_services(self):
         """LUIS: Inicializa servicios de persistencia mejorados."""
         self.context_manager: IContextManager = MongoContextManager(
-            self.mongo_client, 
-            self.settings.DB_NAME
+            self.mongo_client
         )
         
         self.event_store: IEventStore = MongoEventStore(
