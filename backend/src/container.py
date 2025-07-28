@@ -135,11 +135,12 @@ class AppContainer:
         # Tool Gateway Agéntico - NUEVA CAPACIDAD FASE 1
         from src.services.agentic.agentic_gateway import AgenticToolGateway
         
+        # Inicializa primero el Tool Gateway sin el driver_ia
         self.tool_gateway: IToolGateway = AgenticToolGateway(
             self.blast_service,
             self.uniprot_service,
-            self.driver_ia,  # Se inicializa después, pero se pasa la referencia
-            self.circuit_breaker_factory
+            llm_service=None,  # Se inicializa después
+            circuit_breaker_factory=self.circuit_breaker_factory
         )
         
         # Driver IA
