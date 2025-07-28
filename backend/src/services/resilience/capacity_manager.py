@@ -53,10 +53,14 @@ class RedisCapacityManager(ICapacityManager):
     async def add_to_waitlist(self, context_id: str) -> int:
         """LUIS: Añade un trabajo a la lista de espera."""
         try:
-            position = await self.redis.rpush(self.waitlist_key, context_id)
-            self.metrics.record_job_queued()
-            self.logger.info(f"Trabajo {context_id} añadido a lista de espera, posición: {position}")
-            return position
+            def _sync_add_to_waitlist():
+                position = self.redis.rpush(self.waitlist_key, context_id)
+                self.metrics.record_job_queued()
+                self.logger.info(f"Trabajo {context_id} añadido a lista de espera, posición: {position}")
+                return position
+            
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, _sync_add_to_waitlist)
             
         except Exception as e:
             self.logger.error(f"Error añadiendo a lista de espera: {e}")
@@ -65,11 +69,15 @@ class RedisCapacityManager(ICapacityManager):
     async def get_next_from_waitlist(self) -> Optional[str]:
         """LUIS: Obtiene el siguiente trabajo de la lista de espera."""
         try:
-            context_id = await self.redis.lpop(self.waitlist_key)
-            if context_id:
-                self.logger.info(f"Trabajo {context_id} sacado de lista de espera")
-                return context_id.decode() if isinstance(context_id, bytes) else context_id
-            return None
+            def _sync_get_next():
+                context_id = self.redis.lpop(self.waitlist_key)
+                if context_id:
+                    self.logger.info(f"Trabajo {context_id} sacado de lista de espera")
+                    return context_id if isinstance(context_id, str) else context_id
+                return None
+            
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, _sync_get_next)
             
         except Exception as e:
             self.logger.error(f"Error obteniendo de lista de espera: {e}")
