@@ -228,9 +228,7 @@ class AppContainer:
             # Asegurar índices de MongoDB
             await self._ensure_mongodb_indexes()
             
-            # Inicializar métricas
-            await self.metrics.initialize()
-            
+            # Métricas ya están inicializadas en el constructor
             self.logger.info("Recursos inicializados correctamente")
             
         except Exception as e:
