@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     # === BÁSICO ===
     PROJECT_NAME: str = Field(default="Astroflora Antares Core")
     PROJECT_VERSION: str = Field(default="5.0.0")
-    ENVIRONMENT: str = Field(default="dev", regex="^(dev|staging|prod)$")
-    LOG_LEVEL: str = Field(default="INFO", regex="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
+    ENVIRONMENT: str = Field(default="dev", pattern="^(dev|staging|prod)$")
+    LOG_LEVEL: str = Field(default="INFO", pattern="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
     
     # === BASE DE DATOS ===
     MONGO_URL: str = Field(default="mongodb://localhost:27017")
