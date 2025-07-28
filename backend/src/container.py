@@ -270,7 +270,8 @@ class AppContainer:
         # Test Redis
         try:
             start = time.time()
-            await self.redis_client.ping()
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, self.redis_client.ping)
             latency = (time.time() - start) * 1000
             health["services"]["redis"] = {
                 "status": "healthy", 
