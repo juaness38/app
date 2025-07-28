@@ -30,16 +30,20 @@ class RedisCapacityManager(ICapacityManager):
             # Si Redis no está disponible, siempre permitir procesamiento
             if not self.redis:
                 return True
+            
+            def _sync_check_capacity():
+                current_jobs = self.redis.get(self.concurrent_jobs_key)
+                current_count = int(current_jobs or 0)
+                can_process = current_count < settings.MAX_CONCURRENT_JOBS
                 
-            current_jobs = await self.redis.get(self.concurrent_jobs_key)
-            current_count = int(current_jobs or 0)
-            can_process = current_count < settings.MAX_CONCURRENT_JOBS
+                # Actualiza métrica de capacidad
+                self.metrics.set_current_capacity(current_count)
+                
+                self.logger.debug(f"Capacidad actual: {current_count}/{settings.MAX_CONCURRENT_JOBS}")
+                return can_process
             
-            # Actualiza métrica de capacidad
-            self.metrics.set_current_capacity(current_count)
-            
-            self.logger.debug(f"Capacidad actual: {current_count}/{settings.MAX_CONCURRENT_JOBS}")
-            return can_process
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, _sync_check_capacity)
             
         except Exception as e:
             self.logger.error(f"Error verificando capacidad: {e}")
