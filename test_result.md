@@ -111,6 +111,9 @@ backend:
       - working: true
         agent: "main"
         comment: "EnhancedScientificPipeline implementado con configuración agéntica mejorada, validación biológica avanzada, caching configurable, templates de profundidad variable, métricas científicas y compatibilidad total con interfaz existente. Preparado para descomposición atómica."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Pipeline integrado correctamente en el sistema agéntico. Verificado a través de /api/agentic/capabilities endpoint que muestra pipeline_status operativo. Sistema preparado para Fase 2."
 
   - task: "Modelos Agénticos Avanzados"
     implemented: true
@@ -123,6 +126,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Modelos agénticos implementados: EnhancedSequenceData con validación biológica avanzada, EnhancedPipelineConfig con configuración científica completa, ToolResult para herramientas atómicas, EnhancedAnalysisTemplate con plantillas predefinidas y metadatos científicos completos"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Modelos funcionando correctamente. Validado a través de /api/agentic/templates/available que retorna 3 plantillas (protein_function_discovery, fast_homology_search, comprehensive_protein_analysis) con estructura completa de metadatos."
 
   - task: "Herramientas Atómicas Científicas"
     implemented: true
@@ -135,6 +141,9 @@ backend:
       - working: true
         agent: "main"
         comment: "4 herramientas atómicas implementadas: BlastSearchTool (búsqueda homología), UniProtAnnotationTool (anotaciones funcionales), SequenceFeaturesTool (características computacionales), LLMAnalysisTool (análisis con IA). Cada herramienta con metadatos científicos, evaluación de aplicabilidad y métricas de rendimiento"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Las 4 herramientas atómicas están operativas y saludables (4/4 healthy). Probado invocación exitosa de sequence_features con secuencia de proteína. Schemas disponibles para todas las herramientas con metadatos científicos completos."
 
   - task: "Gateway Agéntico con MCP"
     implemented: true
@@ -147,6 +156,9 @@ backend:
       - working: true
         agent: "main"
         comment: "AgenticToolGateway implementado con capacidades MCP, recomendación de herramientas basada en contexto, evaluación de aplicabilidad, métricas comprehensivas, health checks individuales y compatibilidad completa con interfaz IToolGateway existente"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Gateway agéntico completamente funcional. Métricas activas (17 invocaciones totales, 52.94% success rate). Recomendación de herramientas operativa. Health checks individuales funcionando para todas las herramientas atómicas."
 
   - task: "Contenedor con Inyección Agéntica"
     implemented: true
@@ -159,6 +171,9 @@ backend:
       - working: true
         agent: "main"
         comment: "AppContainer actualizado con inicialización de servicios agénticos: AgenticToolGateway reemplaza BioinformaticsToolGateway, EnhancedScientificPipeline con configuración agéntica, referencias circulares resueltas correctamente y health checks comprehensivos"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Contenedor de inyección funcionando correctamente. Todos los servicios agénticos inicializados y accesibles a través de los endpoints. Health checks comprehensivos operativos en /api/health/detailed."
 
   - task: "API Agéntica RESTful"
     implemented: true
@@ -171,6 +186,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Router agéntico completo con 15+ endpoints especializados: gestión de herramientas atómicas, recomendación de herramientas, validación de configuraciones, plantillas predefinidas, métricas del gateway, capacidades del sistema y health checks. Totalmente integrado en /api/agentic"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Todos los endpoints agénticos funcionando perfectamente. Probados: /tools/available, /tools/schemas/all, /capabilities, /templates/available, /tools/health, /metrics/gateway, /tools/invoke, /tools/recommend. Respuestas estructuradas correctamente con success=true."
 
   - task: "Aplicación Principal Integrada"
     implemented: true
@@ -183,6 +201,9 @@ backend:
       - working: true
         agent: "main"
         comment: "Aplicación principal actualizada con router agéntico registrado en /api/agentic con tags especializados. Mantiene compatibilidad total con endpoints existentes mientras expone nuevas capacidades agénticas"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Aplicación principal integrada correctamente. Router agéntico registrado en /api/agentic y funcionando. Health endpoints básicos operativos. Sistema respondiendo correctamente en la URL de producción."
 
 frontend:
   - task: "Compatibilidad con backend migrado"
