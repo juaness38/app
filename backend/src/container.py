@@ -183,17 +183,36 @@ class AppContainer:
         self.logger.info("Servicios del pipeline inicializados")
 
     def _init_scientific_pipeline(self):
-        """LUIS: Inicializa el pipeline científico principal."""
-        from src.core.pipeline import ScientificPipeline
+        """LUIS: Inicializa el pipeline científico principal con capacidades agénticas mejoradas."""
+        from src.core.pipeline import EnhancedScientificPipeline
+        from src.models.analysis import EnhancedPipelineConfig
         
-        self.pipeline_service: IPipelineService = ScientificPipeline(
+        # Configuración mejorada del pipeline con valores por defecto agénticos
+        enhanced_config = EnhancedPipelineConfig(
+            blast_database="nr",
+            evalue_threshold=1e-10,
+            max_target_seqs=100,
+            uniprot_fields=["function", "pathway", "domain", "subcellular_location"],
+            llm_analysis_depth="detailed",
+            llm_max_tokens=1500,
+            llm_temperature=0.3,
+            max_concurrent_sequences=5,
+            enable_caching=True,
+            blast_cache_ttl=3600,
+            uniprot_cache_ttl=7200,
+            features_cache_ttl=86400,
+            uniprot_batch_size=10
+        )
+        
+        self.pipeline_service: IPipelineService = EnhancedScientificPipeline(
             self.blast_service,
             self.uniprot_service,
             self.driver_ia,  # También funciona como ILLMService
-            self.circuit_breaker_factory
+            self.circuit_breaker_factory,
+            config=enhanced_config
         )
         
-        self.logger.info("Pipeline científico inicializado")
+        self.logger.info("Pipeline científico agéntico mejorado inicializado")
 
     def _init_analysis_worker(self):
         """LUIS: Inicializa el worker de análisis mejorado."""
