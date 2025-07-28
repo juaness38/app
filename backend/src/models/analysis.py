@@ -1,205 +1,259 @@
 # -*- coding: utf-8 -*-
 """
-ASTROFLORA BACKEND - MODELOS DE DATOS
-LUIS: Contratos de datos (DTOs) que fluyen por el sistema.
+ASTROFLORA BACKEND - MODELOS DE DATOS MEJORADOS
+LUIS: Modelos Pydantic completos con validaciones avanzadas.
 """
-from pydantic import BaseModel, Field, ConfigDict
-from typing import Dict, Any, List, Optional
-from enum import Enum
-from datetime import datetime
 import uuid
+import time
+from datetime import datetime
+from typing import Dict, Any, List, Optional, Union, Literal
+from enum import Enum
+from pydantic import BaseModel, Field, validator
 
+# === ENUMS Y TIPOS ===
 class AnalysisStatus(str, Enum):
-    """Estados posibles de un análisis."""
-    PENDING = "PENDING"
-    QUEUED = "QUEUED"  
-    PROCESSING = "PROCESSING"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-    CANCELLED = "CANCELLED"
+    QUEUED = "queued"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
 
 class PromptProtocolType(str, Enum):
-    """Tipos de protocolos científicos disponibles."""
     PROTEIN_FUNCTION_ANALYSIS = "PROTEIN_FUNCTION_ANALYSIS"
     SEQUENCE_ALIGNMENT = "SEQUENCE_ALIGNMENT"
     STRUCTURE_PREDICTION = "STRUCTURE_PREDICTION"
     DRUG_DESIGN = "DRUG_DESIGN"
     BIOREACTOR_OPTIMIZATION = "BIOREACTOR_OPTIMIZATION"
-    PIPELINE_BATCH = "PIPELINE_BATCH"  # Nuevo tipo para pipeline batch
+    PIPELINE_BATCH = "PIPELINE_BATCH"
 
-# ============================================================================
-# MODELOS ESPECÍFICOS PARA PIPELINE CIENTÍFICO
-# ============================================================================
+class EventType(str, Enum):
+    ANALYSIS_STARTED = "analysis_started"
+    TOOL_CALLED = "tool_called"
+    STEP_COMPLETED = "step_completed"
+    ANALYSIS_COMPLETED = "analysis_completed"
+    ERROR_OCCURRED = "error_occurred"
 
+# === MODELOS BASE MEJORADOS ===
 class SequenceData(BaseModel):
-    """Modelo para datos de secuencia biológica."""
-    id: str = Field(..., description="Identificador único de la secuencia")
+    """Datos de secuencia biológica con validación."""
     sequence: str = Field(..., min_length=10, description="Secuencia biológica")
-    sequence_type: Optional[str] = Field(None, description="Tipo: DNA, RNA, protein")
-    description: Optional[str] = Field(None, description="Descripción de la secuencia")
-    organism: Optional[str] = Field(None, description="Organismo de origen")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadatos adicionales")
+    sequence_type: str = Field("protein", description="Tipo de secuencia")
+    organism: Optional[str] = Field(None, description="Organismo origen")
+    
+    @validator('sequence')
+    def validate_biological_sequence(cls, v, values):
+        """Valida secuencias biológicas según el tipo."""
+        sequence_type = values.get('sequence_type', 'protein')
+        if sequence_type == 'protein':
+            valid_chars = set('ACDEFGHIKLMNPQRSTVWY')
+            if not set(v.upper()).issubset(valid_chars):
+                raise ValueError('Invalid protein sequence characters')
+        elif sequence_type == 'dna':
+            valid_chars = set('ATCG')
+            if not set(v.upper()).issubset(valid_chars):
+                raise ValueError('Invalid DNA sequence characters')
+        return v.upper()
 
-class BlastResult(BaseModel):
-    """Resultado de búsqueda BLAST."""
+class PipelineConfig(BaseModel):
+    """Configuración tipada para el pipeline científico."""
+    blast_database: str = Field("nr", description="Base de datos BLAST")
+    evalue_threshold: float = Field(1e-10, ge=0, description="E-value threshold")
+    max_target_seqs: int = Field(500, ge=1, le=1000, description="Máximo secuencias objetivo")
+    uniprot_fields: List[str] = Field(default_factory=lambda: ["function", "pathway"], description="Campos UniProt")
+    llm_analysis_depth: str = Field("detailed", regex="^(basic|detailed|comprehensive)$", description="Profundidad de análisis LLM")
+    max_blast_hits: int = Field(50, ge=1, le=200, description="Máximo hits BLAST")
+    llm_max_tokens: int = Field(1000, ge=100, le=4000, description="Máximo tokens LLM")
+    uniprot_batch_size: int = Field(10, ge=1, le=50, description="Tamaño de lote UniProt")
+
+class CacheableResult(BaseModel):
+    """Base para resultados cacheables."""
+    cache_key: str = Field(..., description="Clave de cache")
+    cache_ttl: int = Field(3600, description="TTL en segundos")
+    cached_at: Optional[datetime] = None
+    
+    def is_cache_valid(self) -> bool:
+        """Verifica si el cache sigue siendo válido."""
+        if not self.cached_at:
+            return False
+        return (datetime.utcnow() - self.cached_at).seconds < self.cache_ttl
+
+class LLMUsage(BaseModel):
+    """Tracking de uso y costos de LLM."""
+    context_id: str
+    model_used: str = Field(..., description="Modelo usado (gpt-4, gpt-3.5-turbo, etc)")
+    prompt_tokens: int = Field(0, description="Tokens en el prompt")
+    completion_tokens: int = Field(0, description="Tokens en la respuesta")
+    total_tokens: int = Field(0, description="Total de tokens")
+    estimated_cost_usd: float = Field(0.0, description="Costo estimado en USD")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+class AnalysisTemplate(BaseModel):
+    """Plantilla predefinida para análisis."""
+    template_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str = Field(..., description="Nombre de la plantilla")
+    description: str = Field(..., description="Descripción detallada")
+    protocol_type: PromptProtocolType
+    default_parameters: Dict[str, Any] = Field(default_factory=dict)
+    estimated_duration_minutes: int = Field(30, description="Duración estimada")
+    cost_tier: str = Field("medium", regex="^(low|medium|high)$")
+    tags: List[str] = Field(default_factory=list)
+
+class APIResponse(BaseModel):
+    """Formato de respuesta estructurado para la API."""
+    success: bool
+    data: Optional[Any] = None
+    error: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    request_id: Optional[str] = None
+
+# === MODELOS DE ANÁLISIS ===
+class AnalysisRequest(BaseModel):
+    """Solicitud de análisis científico."""
+    context_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str = Field(..., description="ID del usuario")
+    workspace_id: str = Field(..., description="ID del workspace")
+    protocol_type: PromptProtocolType = Field(..., description="Tipo de protocolo")
+    sequence_data: Optional[SequenceData] = Field(None, description="Datos de secuencia")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parámetros adicionales")
+    config: PipelineConfig = Field(default_factory=PipelineConfig, description="Configuración del pipeline")
+    priority: int = Field(1, ge=1, le=5, description="Prioridad del análisis")
+
+class AnalysisContext(BaseModel):
+    """Contexto completo de un análisis en curso."""
+    context_id: str = Field(..., description="ID único del contexto")
+    user_id: str = Field(..., description="ID del usuario")
+    workspace_id: str = Field(..., description="ID del workspace")
+    protocol_type: PromptProtocolType = Field(..., description="Tipo de protocolo")
+    status: AnalysisStatus = Field(AnalysisStatus.QUEUED, description="Estado actual")
+    sequence_data: Optional[SequenceData] = Field(None, description="Datos de secuencia")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parámetros")
+    results: Optional[Dict[str, Any]] = Field(None, description="Resultados")
+    progress: int = Field(0, ge=0, le=100, description="Progreso porcentual")
+    current_step: Optional[str] = Field(None, description="Paso actual")
+    error_message: Optional[str] = Field(None, description="Mensaje de error")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: Optional[datetime] = Field(None)
+    duration_seconds: Optional[int] = Field(None, description="Duración en segundos")
+
+class PromptNode(BaseModel):
+    """Nodo individual en un protocolo de prompts."""
+    node_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tool_name: str = Field(..., description="Nombre de la herramienta")
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+    dependencies: List[str] = Field(default_factory=list, description="IDs de nodos dependientes")
+    retry_count: int = Field(0, description="Número de reintentos")
+    max_retries: int = Field(3, description="Máximo número de reintentos")
+    timeout_seconds: int = Field(300, description="Timeout en segundos")
+
+class PromptProtocol(BaseModel):
+    """Protocolo completo de análisis científico."""
+    protocol_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    protocol_type: PromptProtocolType = Field(..., description="Tipo de protocolo")
+    nodes: List[PromptNode] = Field(..., description="Lista de nodos del protocolo")
+    config: PipelineConfig = Field(default_factory=PipelineConfig)
+    created_by: str = Field("driver_ia", description="Creado por")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class AnalysisEvent(BaseModel):
+    """Evento en el historial de un análisis."""
+    event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    context_id: str = Field(..., description="ID del contexto")
+    event_type: EventType = Field(..., description="Tipo de evento")
+    data: Dict[str, Any] = Field(default_factory=dict, description="Datos del evento")
+    agent: str = Field(..., description="Agente que generó el evento")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    execution_time_ms: Optional[float] = Field(None, description="Tiempo de ejecución")
+
+# === MODELOS DE RESULTADOS ===
+class BlastResult(CacheableResult):
+    """Resultado de análisis BLAST."""
     query_sequence: str = Field(..., description="Secuencia consultada")
-    query_length: int = Field(..., description="Longitud de la secuencia")
-    database: str = Field(..., description="Base de datos consultada")
-    total_hits: int = Field(..., description="Número total de hits")
-    hits: List[Dict[str, Any]] = Field(..., description="Lista de hits encontrados")
-    search_time: float = Field(..., description="Tiempo de búsqueda en segundos")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parámetros de búsqueda")
+    hits: List[Dict[str, Any]] = Field(default_factory=list, description="Hits encontrados")
+    statistics: Dict[str, Any] = Field(default_factory=dict, description="Estadísticas")
+    database_used: str = Field(..., description="Base de datos usada")
 
-class UniProtResult(BaseModel):
+class UniProtResult(CacheableResult):
     """Resultado de consulta UniProt."""
-    query_ids: List[str] = Field(..., description="IDs de proteínas consultadas")
-    total_found: int = Field(..., description="Número de anotaciones encontradas")
-    annotations: List[Dict[str, Any]] = Field(..., description="Anotaciones obtenidas")
-    search_time: float = Field(..., description="Tiempo de consulta en segundos")
-    database_version: str = Field(..., description="Versión de la base de datos")
+    protein_ids: List[str] = Field(default_factory=list, description="IDs de proteínas")
+    entries: List[Dict[str, Any]] = Field(default_factory=list, description="Entradas UniProt")
+    fields_retrieved: List[str] = Field(default_factory=list, description="Campos obtenidos")
 
 class LLMResult(BaseModel):
     """Resultado de análisis con LLM."""
-    prompt: str = Field(..., description="Prompt utilizado")
-    response: Dict[str, Any] = Field(..., description="Respuesta del LLM")
-    model_used: str = Field(..., description="Modelo de LLM utilizado")
-    tokens_used: int = Field(0, description="Tokens consumidos")
-    processing_time: float = Field(..., description="Tiempo de procesamiento")
+    analysis: str = Field(..., description="Análisis generado")
+    confidence_score: float = Field(0.0, ge=0.0, le=1.0, description="Puntuación de confianza")
+    model_used: str = Field(..., description="Modelo LLM usado")
+    usage: LLMUsage = Field(..., description="Información de uso")
+    sources: List[str] = Field(default_factory=list, description="Fuentes usadas")
 
 class PipelineResult(BaseModel):
-    """Resultado completo del pipeline para una secuencia."""
-    sequence_id: str = Field(..., description="ID de la secuencia procesada")
-    success: bool = Field(..., description="Éxito del pipeline")
-    steps: List[Dict[str, Any]] = Field(default_factory=list, description="Pasos ejecutados")
-    processing_time: float = Field(..., description="Tiempo total de procesamiento")
-    final_result: Optional[Dict[str, Any]] = Field(None, description="Resultado final")
-    error: Optional[str] = Field(None, description="Mensaje de error si falló")
+    """Resultado completo del pipeline científico."""
+    context_id: str = Field(..., description="ID del contexto")
+    blast_result: Optional[BlastResult] = Field(None, description="Resultado BLAST")
+    uniprot_result: Optional[UniProtResult] = Field(None, description="Resultado UniProt")
+    llm_result: Optional[LLMResult] = Field(None, description="Resultado LLM")
+    final_analysis: Optional[str] = Field(None, description="Análisis final")
+    execution_summary: Dict[str, Any] = Field(default_factory=dict, description="Resumen de ejecución")
 
-# ============================================================================
-# MODELOS EXISTENTES ACTUALIZADOS
-# ============================================================================
-
-class AnalysisRequest(BaseModel):
-    """Modelo para una nueva solicitud de análisis."""
-    workspace_id: str = Field(..., description="ID del workspace")
-    protocol_type: PromptProtocolType = Field(..., description="Tipo de protocolo a ejecutar")
-    sequence: Optional[str] = Field(None, min_length=10, description="Secuencia biológica")
-    target_protein: Optional[str] = Field(None, description="Proteína objetivo")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Parámetros específicos")
-    priority: int = Field(1, ge=1, le=5, description="Prioridad del análisis (1=alta, 5=baja)")
+# === COST TRACKER ===
+class CostTracker:
+    """Calculador de costos de LLM."""
+    PRICING = {
+        "gpt-4": {"prompt": 0.03/1000, "completion": 0.06/1000},
+        "gpt-3.5-turbo": {"prompt": 0.0015/1000, "completion": 0.002/1000},
+        "gpt-4o": {"prompt": 0.005/1000, "completion": 0.015/1000}
+    }
     
-    # Campos específicos para pipeline batch
-    sequences: Optional[List[SequenceData]] = Field(None, description="Lista de secuencias para batch")
-    batch_size: Optional[int] = Field(None, ge=1, le=100, description="Tamaño del lote")
+    @classmethod
+    def calculate_cost(cls, model: str, prompt_tokens: int, completion_tokens: int) -> float:
+        """Calcula el costo de uso del LLM."""
+        if model not in cls.PRICING:
+            return 0.0
+        
+        pricing = cls.PRICING[model]
+        return (prompt_tokens * pricing["prompt"]) + (completion_tokens * pricing["completion"])
 
-class AnalysisContext(BaseModel):
-    """Modelo que representa el estado de un análisis en curso."""
-    context_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    status: AnalysisStatus = Field(default=AnalysisStatus.PENDING)
-    workspace_id: str
-    user_id: str
-    protocol_type: PromptProtocolType
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-    progress: int = Field(0, ge=0, le=100, description="Progreso del análisis (0-100)")
-    current_step: Optional[str] = Field(None, description="Paso actual del protocolo")
-    results: Dict[str, Any] = Field(default_factory=dict, description="Resultados del análisis")
-    error_message: Optional[str] = Field(None, description="Mensaje de error si falló")
-    
-    # Campos específicos para pipeline batch
-    batch_info: Optional[Dict[str, Any]] = Field(None, description="Información del lote si aplica")
-    
-    model_config = ConfigDict(from_attributes=True)
+# === PLANTILLAS PREDEFINIDAS ===
+ANALYSIS_TEMPLATES = {
+    "protein_function": AnalysisTemplate(
+        name="Protein Function Discovery",
+        description="Análisis completo de función de proteína usando BLAST + UniProt + LLM",
+        protocol_type=PromptProtocolType.PROTEIN_FUNCTION_ANALYSIS,
+        default_parameters={
+            "blast_database": "nr",
+            "evalue_threshold": 1e-10,
+            "max_blast_hits": 50,
+            "uniprot_fields": ["function", "pathway", "domain"],
+            "llm_analysis_depth": "detailed"
+        },
+        estimated_duration_minutes=45,
+        cost_tier="medium",
+        tags=["protein", "function", "annotation"]
+    ),
+    "sequence_alignment": AnalysisTemplate(
+        name="Multiple Sequence Alignment",
+        description="Alineamiento múltiple de secuencias con análisis de conservación",
+        protocol_type=PromptProtocolType.SEQUENCE_ALIGNMENT,
+        default_parameters={
+            "alignment_method": "mafft",
+            "gap_penalty": -10,
+            "conservation_threshold": 0.8
+        },
+        estimated_duration_minutes=30,
+        cost_tier="low",
+        tags=["alignment", "conservation", "phylogeny"]
+    )
+}
 
-class JobPayload(BaseModel):
-    """Payload que se envía a la cola SQS para procesamiento."""
-    context_id: str
-    trace_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    priority: int = Field(1, ge=1, le=5)
-    job_type: str = Field("analysis", description="Tipo de trabajo: analysis, pipeline_batch")
-    
-class PromptNode(BaseModel):
-    """Nodo individual de un Prompt Protocol."""
-    node_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    name: str = Field(..., description="Nombre del nodo")
-    description: str = Field(..., description="Descripción del paso")
-    tool_name: Optional[str] = Field(None, description="Herramienta a usar")
-    parameters: Dict[str, Any] = Field(default_factory=dict)
-    depends_on: List[str] = Field(default_factory=list, description="IDs de nodos dependientes")
-    
-class PromptProtocol(BaseModel):
-    """Protocolo científico completo con sus pasos."""
-    protocol_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    name: str = Field(..., description="Nombre del protocolo")
-    description: str = Field(..., description="Descripción del protocolo")
-    protocol_type: PromptProtocolType
-    nodes: List[PromptNode] = Field(..., description="Nodos del protocolo")
-    version: str = Field("1.0", description="Versión del protocolo")
-    
-class ToolResult(BaseModel):
-    """Resultado de la ejecución de una herramienta."""
-    tool_name: str
-    success: bool
-    result: Any = Field(None, description="Resultado de la herramienta")
-    error_message: Optional[str] = None
-    execution_time: float = Field(0.0, description="Tiempo de ejecución en segundos")
-    
-class EventStoreEntry(BaseModel):
-    """Entrada del EventStore para auditoría."""
-    event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    context_id: str
-    event_type: str = Field(..., description="Tipo de evento")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    data: Dict[str, Any] = Field(default_factory=dict)
-    agent: str = Field("system", description="Agente que generó el evento")
-
-# ============================================================================
-# MODELOS PARA LOGGING ESTRUCTURADO
-# ============================================================================
-
-class StructuredLogEntry(BaseModel):
-    """Entrada de log estructurada."""
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    level: str = Field(..., description="Nivel de log: INFO, WARNING, ERROR")
-    service: str = Field(..., description="Servicio que genera el log")
-    event_type: str = Field(..., description="Tipo de evento")
-    context_id: Optional[str] = Field(None, description="ID de contexto si aplica")
-    message: str = Field(..., description="Mensaje del log")
-    data: Dict[str, Any] = Field(default_factory=dict, description="Datos adicionales")
-    trace_id: Optional[str] = Field(None, description="ID de traza distribuida")
-
-class MetricEntry(BaseModel):
-    """Entrada de métrica."""
-    metric_name: str = Field(..., description="Nombre de la métrica")
-    value: float = Field(..., description="Valor de la métrica")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    tags: Dict[str, str] = Field(default_factory=dict, description="Tags adicionales")
-    unit: Optional[str] = Field(None, description="Unidad de medida")
-
-# ============================================================================
-# MODELOS DE RESPUESTA PARA API
-# ============================================================================
-
-class PipelineBatchRequest(BaseModel):
-    """Solicitud para ejecutar pipeline en lote."""
-    sequences: List[SequenceData] = Field(..., description="Lista de secuencias a procesar")
-    pipeline_config: Dict[str, Any] = Field(default_factory=dict, description="Configuración del pipeline")
-    notification_webhook: Optional[str] = Field(None, description="URL para notificaciones")
-
-class PipelineBatchResponse(BaseModel):
-    """Respuesta del pipeline en lote."""
-    batch_id: str = Field(..., description="ID del lote procesado")
-    total_sequences: int = Field(..., description="Total de secuencias procesadas")
-    successful: int = Field(..., description="Secuencias procesadas exitosamente")
-    failed: int = Field(..., description="Secuencias que fallaron")
-    total_processing_time: float = Field(..., description="Tiempo total de procesamiento")
-    average_time_per_sequence: float = Field(..., description="Tiempo promedio por secuencia")
-    results: List[Dict[str, Any]] = Field(..., description="Resultados detallados")
-
-class HealthCheckResponse(BaseModel):
-    """Respuesta de health check."""
-    service: str = Field(..., description="Nombre del servicio")
-    status: str = Field(..., description="Estado: healthy, unhealthy, degraded")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-    details: Dict[str, Any] = Field(default_factory=dict, description="Detalles adicionales")
-    dependencies: Dict[str, str] = Field(default_factory=dict, description="Estado de dependencias")
+# === QUERY MODELS ===
+class AnalysisQuery(BaseModel):
+    """Parámetros de búsqueda avanzada de análisis."""
+    status: Optional[AnalysisStatus] = None
+    protocol_type: Optional[PromptProtocolType] = None
+    created_after: Optional[datetime] = None
+    created_before: Optional[datetime] = None
+    workspace_id: Optional[str] = None
+    user_id: Optional[str] = None
+    limit: int = Field(20, ge=1, le=100)
+    offset: int = Field(0, ge=0)

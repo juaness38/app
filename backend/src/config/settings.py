@@ -1,63 +1,109 @@
 # -*- coding: utf-8 -*-
 """
-ASTROFLORA BACKEND - CONFIGURACIÓN CENTRALIZADA
-LUIS: Toda la configuración vive aquí. Un solo lugar para gobernar todo.
+ASTROFLORA BACKEND - CONFIGURACIÓN MEJORADA
+LUIS: Settings con validación avanzada y configuración robusta.
 """
-from pydantic_settings import BaseSettings
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
+from typing import List
+from pydantic import BaseSettings, Field, validator
 
 class Settings(BaseSettings):
-    """
-    LUIS: Define todas las variables de configuración de la aplicación.
-    Carga valores desde el entorno o un archivo .env. No hardcodees nada.
-    """
-    # LUIS: Configuración del proyecto.
-    PROJECT_NAME: str = "Astroflora Antares Core"
-    PROJECT_VERSION: str = "5.0.0"
-    LOG_LEVEL: str = "INFO"
-    ENVIRONMENT: str = "dev"  # 'dev' o 'prod'
-
-    # LUIS: Configuración de seguridad.
-    ASTROFLORA_API_KEY: str = "your-super-secret-astroflora-api-key"
-    JWT_SECRET_KEY: str = "a_very_secret_key_for_antares"
-    JWT_ALGORITHM: str = "HS256"
-
-    # LUIS: Claves de API para LLMs (placeholders por ahora)
-    OPENAI_API_KEY: str = "sk-placeholder-openai-key"
-    GEMINI_API_KEY: str = "placeholder-gemini-key"
-    ANTHROPIC_API_KEY: str = "placeholder-anthropic-key"
-
-    # LUIS: URLs de servicios externos y dependencias.
-    MONGO_URL: str = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-    DB_NAME: str = os.environ.get('DB_NAME', 'astroflora_antares')
-    REDIS_URL: str = "redis://localhost:6379/5"
-    SQS_ANALYSIS_QUEUE_URL: str = "http://localhost:4566/000000000000/astroflora-analysis-queue"
-    AWS_REGION: str = "us-east-1"
-
-    # LUIS: Configuración de servicios bioinformáticos
-    BLAST_SERVICE_URL: str = "https://blast.ncbi.nlm.nih.gov/Blast.cgi"
-    ALPHAFOLD_SERVICE_URL: str = "https://alphafold.ebi.ac.uk/api"
-    SWISS_MODEL_URL: str = "https://swissmodel.expasy.org/repository"
-    SWISS_DOCK_URL: str = "http://www.swissdock.ch"
-    MAFFT_SERVICE_URL: str = "https://mafft.cbrc.jp/alignment/server"
-    MUSCLE_SERVICE_URL: str = "https://www.ebi.ac.uk/Tools/msa/muscle"
-
-    # LUIS: Parámetros de resiliencia.
-    CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = 5
-    CIRCUIT_BREAKER_OPEN_SECONDS: int = 60
-    RETRY_MAX_ATTEMPTS: int = 3
-    RETRY_WAIT_MULTIPLIER: int = 1
-
-    # LUIS: Parámetros de gestión de capacidad.
-    MAX_CONCURRENT_JOBS: int = 10
-    MAX_ANALYSIS_DURATION: int = 3600  # 1 hora en segundos
-
+    """Configuración centralizada con validaciones."""
+    
+    # === BÁSICO ===
+    PROJECT_NAME: str = Field(default="Astroflora Antares Core")
+    PROJECT_VERSION: str = Field(default="5.0.0")
+    ENVIRONMENT: str = Field(default="dev", regex="^(dev|staging|prod)$")
+    LOG_LEVEL: str = Field(default="INFO", regex="^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
+    
+    # === BASE DE DATOS ===
+    MONGO_URL: str = Field(default="mongodb://localhost:27017")
+    DB_NAME: str = Field(default="astroflora_antares")
+    
+    # === SEGURIDAD ===
+    ASTROFLORA_API_KEY: str = Field(default="antares-super-secret-key-2024")
+    JWT_SECRET_KEY: str = Field(default="antares-jwt-secret-key-very-secure")
+    JWT_ALGORITHM: str = Field(default="HS256")
+    
+    # === IA CONFIGURATION ===
+    OPENAI_API_KEY: str = Field(default="sk-placeholder-openai-key")
+    GEMINI_API_KEY: str = Field(default="placeholder-gemini-key")
+    ANTHROPIC_API_KEY: str = Field(default="placeholder-anthropic-key")
+    
+    @validator('OPENAI_API_KEY')
+    def validate_openai_key(cls, v):
+        """Valida formato de clave OpenAI."""
+        if v != "sk-placeholder-openai-key" and not v.startswith('sk-'):
+            raise ValueError('Invalid OpenAI API key format')
+        return v
+    
+    @validator('ANTHROPIC_API_KEY')
+    def validate_anthropic_key(cls, v):
+        """Valida formato de clave Anthropic."""
+        if v != "placeholder-anthropic-key" and not v.startswith('sk-ant-'):
+            raise ValueError('Invalid Anthropic API key format')
+        return v
+    
+    # === SERVICIOS EXTERNOS ===
+    REDIS_URL: str = Field(default="redis://localhost:6379/5")
+    SQS_ANALYSIS_QUEUE_URL: str = Field(default="http://localhost:4566/000000000000/astroflora-analysis-queue")
+    SQS_DLQ_URL: str = Field(default="http://localhost:4566/000000000000/astroflora-analysis-dlq")
+    AWS_REGION: str = Field(default="us-east-1")
+    
+    # === SERVICIOS BIOINFORMÁTICOS ===
+    BLAST_SERVICE_URL: str = Field(default="https://blast.ncbi.nlm.nih.gov/Blast.cgi")
+    ALPHAFOLD_SERVICE_URL: str = Field(default="https://alphafold.ebi.ac.uk/api")
+    SWISS_MODEL_URL: str = Field(default="https://swissmodel.expasy.org/repository")
+    SWISS_DOCK_URL: str = Field(default="http://www.swissdock.ch")
+    MAFFT_SERVICE_URL: str = Field(default="https://mafft.cbrc.jp/alignment/server")
+    MUSCLE_SERVICE_URL: str = Field(default="https://www.ebi.ac.uk/Tools/msa/muscle")
+    
+    # === PARÁMETROS DE RESILIENCIA ===
+    CIRCUIT_BREAKER_FAILURE_THRESHOLD: int = Field(default=5, ge=1, le=20)
+    CIRCUIT_BREAKER_OPEN_SECONDS: int = Field(default=60, ge=10, le=300)
+    RETRY_MAX_ATTEMPTS: int = Field(default=3, ge=1, le=10)
+    RETRY_WAIT_MULTIPLIER: int = Field(default=1, ge=1, le=5)
+    
+    # === GESTIÓN DE CAPACIDAD ===
+    MAX_CONCURRENT_JOBS: int = Field(default=10, ge=1, le=100)
+    MAX_ANALYSIS_DURATION: int = Field(default=3600, ge=300, le=7200)
+    
+    # === RATE LIMITING ===
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = Field(default=60, ge=10, le=1000)
+    RATE_LIMIT_ANALYSIS_PER_MINUTE: int = Field(default=10, ge=1, le=50)
+    
+    # === CACHE SETTINGS ===
+    CACHE_TTL_SECONDS: int = Field(default=3600, ge=300, le=86400)
+    BLAST_CACHE_TTL: int = Field(default=7200, ge=600, le=86400)
+    UNIPROT_CACHE_TTL: int = Field(default=14400, ge=600, le=86400)
+    
+    # === MONITORING ===
+    PROMETHEUS_PORT: int = Field(default=9090, ge=1024, le=65535)
+    HEALTH_CHECK_TIMEOUT: int = Field(default=30, ge=5, le=120)
+    
+    @validator('ENVIRONMENT')
+    def validate_environment(cls, v):
+        """Valida entorno."""
+        valid_envs = ["dev", "staging", "prod"]
+        if v not in valid_envs:
+            raise ValueError(f'Environment must be one of: {valid_envs}')
+        return v
+    
+    def is_production(self) -> bool:
+        """Verifica si está en producción."""
+        return self.ENVIRONMENT == "prod"
+    
+    def has_real_ai_keys(self) -> bool:
+        """Verifica si tiene claves de IA reales."""
+        return (
+            not self.OPENAI_API_KEY.startswith("sk-placeholder") or
+            not self.GEMINI_API_KEY.startswith("placeholder") or
+            not self.ANTHROPIC_API_KEY.startswith("placeholder")
+        )
+    
     class Config:
         env_file = ".env"
-        extra = "ignore"
+        case_sensitive = True
 
-# LUIS: Crea una instancia única de la configuración para ser usada en toda la app.
+# Instancia global de configuración
 settings = Settings()
