@@ -73,12 +73,9 @@ class AppContainer:
 
     def _init_clients(self):
         """LUIS: Inicializa clientes de base mejorados (Redis, MongoDB)."""
-        # Cliente Redis
+        # Cliente Redis (aioredis 1.3.1 compatible)
         self.redis_client = aioredis.from_url(
-            self.settings.REDIS_URL, 
-            decode_responses=True,
-            retry_on_timeout=True,
-            health_check_interval=30
+            self.settings.REDIS_URL
         )
         
         # Cliente MongoDB
