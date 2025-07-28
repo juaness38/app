@@ -5,8 +5,9 @@ LUIS: Protege el sistema de fallos en cascada de servicios externos.
 """
 import logging
 import time
+import asyncio
 from typing import Any, Callable
-import redis.asyncio as aioredis
+import redis
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 import httpx
 from src.services.interfaces import ICircuitBreaker, IMetricsService
@@ -19,7 +20,7 @@ class RedisCircuitBreaker(ICircuitBreaker):
     Protege al sistema de fallos en cascada de servicios externos.
     """
     
-    def __init__(self, service_name: str, redis_client: aioredis.Redis, metrics: IMetricsService):
+    def __init__(self, service_name: str, redis_client: redis.Redis, metrics: IMetricsService):
         self.name = service_name
         self.redis = redis_client
         self.metrics = metrics
@@ -173,7 +174,7 @@ class CircuitBreakerFactory:
     Implementa el patrón Factory para generar instancias de CircuitBreaker.
     """
     
-    def __init__(self, redis_client: aioredis.Redis, failure_threshold: int, open_seconds: int):
+    def __init__(self, redis_client: redis.Redis, failure_threshold: int, open_seconds: int):
         """
         Inicializa la factory con configuración compartida.
         
