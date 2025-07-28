@@ -3,6 +3,7 @@
 ASTROFLORA BACKEND - CONTENEDOR DE DEPENDENCIAS MEJORADO
 LUIS: Fábrica central mejorada con health checks comprehensivos.
 """
+import asyncio
 import logging
 import time
 from typing import Optional, Dict, Any
