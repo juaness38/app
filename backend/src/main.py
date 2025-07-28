@@ -19,6 +19,7 @@ from src.config.settings import settings
 from src.container import AppContainer
 from src.api.dependencies import set_container
 from src.api.routers import analysis, health
+from src.api.routers import agentic  # NUEVO: Router agéntico - Fase 1
 from src.models.analysis import APIResponse
 from src.core.exceptions import (
     AstrofloraException, ServiceUnavailableException, 
