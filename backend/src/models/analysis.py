@@ -214,7 +214,250 @@ class CostTracker:
         pricing = cls.PRICING[model]
         return (prompt_tokens * pricing["prompt"]) + (completion_tokens * pricing["completion"])
 
-# === PLANTILLAS PREDEFINIDAS ===
+# === MODELOS AGÉNTICOS ADICIONALES ===
+class AnalysisDepth(str, Enum):
+    """Profundidad de análisis LLM mejorada."""
+    BASIC = "basic"
+    DETAILED = "detailed"
+    COMPREHENSIVE = "comprehensive"
+
+class SequenceType(str, Enum):
+    """Tipos de secuencia biológica validados."""
+    DNA = "dna"
+    RNA = "rna"
+    PROTEIN = "protein"
+    UNKNOWN = "unknown"
+
+class CostTier(str, Enum):
+    """Niveles de costo de análisis."""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+# Actualizar SequenceData con validación biológica avanzada
+class EnhancedSequenceData(BaseModel):
+    """Datos de secuencia con validación biológica avanzada."""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    sequence: str = Field(..., min_length=10, description="Secuencia biológica")
+    sequence_type: Optional[SequenceType] = Field(None, description="Tipo de secuencia")
+    description: Optional[str] = Field(None, description="Descripción")
+    organism: Optional[str] = Field(None, description="Organismo de origen")
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    @validator('sequence')
+    def validate_biological_sequence(cls, v, values):
+        """Validación biológica avanzada."""
+        if not v:
+            raise ValueError('Secuencia no puede estar vacía')
+
+        sequence_type = values.get('sequence_type')
+        v_upper = v.upper()
+
+        if sequence_type == SequenceType.PROTEIN:
+            valid_chars = set('ACDEFGHIKLMNPQRSTVWY*-')
+            invalid_chars = set(v_upper) - valid_chars
+            if invalid_chars:
+                raise ValueError(f'Secuencia de proteína contiene caracteres inválidos: {invalid_chars}')
+        elif sequence_type == SequenceType.DNA:
+            valid_chars = set('ATCGN-')
+            invalid_chars = set(v_upper) - valid_chars
+            if invalid_chars:
+                raise ValueError(f'Secuencia de DNA contiene caracteres inválidos: {invalid_chars}')
+        elif sequence_type == SequenceType.RNA:
+            valid_chars = set('AUCGN-')
+            invalid_chars = set(v_upper) - valid_chars
+            if invalid_chars:
+                raise ValueError(f'Secuencia de RNA contiene caracteres inválidos: {invalid_chars}')
+
+        return v_upper
+
+    @validator('sequence_type', pre=True)
+    def auto_detect_sequence_type(cls, v, values):
+        """Auto-detecta el tipo de secuencia."""
+        if v is not None:
+            return v
+
+        sequence = values.get('sequence', '').upper()
+        if not sequence:
+            return SequenceType.UNKNOWN
+
+        chars = set(sequence)
+        if 'U' in chars and 'T' not in chars:
+            return SequenceType.RNA
+        
+        dna_chars = set('ATCGN-')
+        if chars.issubset(dna_chars):
+            return SequenceType.DNA
+        
+        protein_chars = set('ACDEFGHIKLMNPQRSTVWY*-')
+        if chars.issubset(protein_chars):
+            return SequenceType.PROTEIN
+
+        return SequenceType.UNKNOWN
+
+# Configuración mejorada del pipeline
+class EnhancedPipelineConfig(BaseModel):
+    """Configuración centralizada mejorada para el pipeline científico."""
+    
+    # Configuración BLAST mejorada
+    blast_database: str = Field("nr", description="Base de datos BLAST")
+    evalue_threshold: float = Field(1e-10, ge=0, description="E-value threshold")
+    max_target_seqs: int = Field(500, ge=1, le=1000, description="Máximo número de hits BLAST")
+    
+    # Configuración UniProt mejorada
+    uniprot_fields: List[str] = Field(
+        default_factory=lambda: ["function", "pathway", "domain"],
+        description="Campos a obtener de UniProt"
+    )
+    uniprot_batch_size: int = Field(10, ge=1, le=20, description="Tamaño de lote UniProt")
+    
+    # Configuración LLM mejorada
+    llm_analysis_depth: AnalysisDepth = Field(
+        AnalysisDepth.DETAILED,
+        description="Profundidad del análisis LLM"
+    )
+    llm_max_tokens: int = Field(1500, ge=100, le=4000, description="Máximo tokens LLM")
+    llm_temperature: float = Field(0.3, ge=0, le=1, description="Temperatura LLM")
+    
+    # Configuración de concurrencia
+    max_concurrent_sequences: int = Field(5, ge=1, le=20, description="Secuencias concurrentes")
+    
+    # Configuración de cache
+    enable_caching: bool = Field(True, description="Habilitar caching")
+    blast_cache_ttl: int = Field(3600, description="TTL cache BLAST en segundos")
+    uniprot_cache_ttl: int = Field(7200, description="TTL cache UniProt en segundos")
+    features_cache_ttl: int = Field(86400, description="TTL cache features en segundos")
+
+    @validator('evalue_threshold')
+    def validate_evalue(cls, v):
+        if v <= 0:
+            raise ValueError('E-value debe ser mayor que 0')
+        return v
+
+    @validator('llm_temperature')
+    def validate_temperature(cls, v):
+        if not 0 <= v <= 2:
+            raise ValueError('Temperature debe estar entre 0 y 2')
+        return v
+
+    class Config:
+        use_enum_values = True
+
+# Modelo de resultado de herramientas atómicas
+class ToolResult(BaseModel):
+    """Resultado de ejecución de herramienta atómica."""
+    tool_name: str = Field(..., description="Nombre de la herramienta")
+    success: bool = Field(..., description="Si la ejecución fue exitosa")
+    result: Optional[Dict[str, Any]] = Field(None, description="Resultado de la herramienta")
+    error_message: Optional[str] = Field(None, description="Mensaje de error si falló")
+    execution_time_ms: Optional[float] = Field(None, description="Tiempo de ejecución")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+# === PLANTILLAS PREDEFINIDAS MEJORADAS ===
+class EnhancedAnalysisTemplate(BaseModel):
+    """Plantilla predefinida mejorada para análisis científicos."""
+    template_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str = Field(..., description="Nombre descriptivo")
+    description: str = Field(..., description="Descripción detallada")
+    protocol_type: PromptProtocolType = Field(..., description="Tipo de protocolo")
+    
+    # Configuración por defecto mejorada
+    default_config: EnhancedPipelineConfig = Field(..., description="Configuración por defecto")
+    
+    # Metadatos mejorados
+    estimated_duration_minutes: int = Field(30, ge=1, description="Duración estimada")
+    cost_tier: CostTier = Field(CostTier.MEDIUM, description="Nivel de costo")
+    tags: List[str] = Field(default_factory=list, description="Tags para categorización")
+    
+    # Información adicional
+    use_cases: List[str] = Field(default_factory=list, description="Casos de uso típicos")
+    limitations: List[str] = Field(default_factory=list, description="Limitaciones conocidas")
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Plantillas predefinidas mejoradas
+ENHANCED_ANALYSIS_TEMPLATES = {
+    "protein_function_discovery": EnhancedAnalysisTemplate(
+        name="Protein Function Discovery",
+        description="Análisis completo de función de proteína usando BLAST + UniProt + LLM",
+        protocol_type=PromptProtocolType.PROTEIN_FUNCTION_ANALYSIS,
+        default_config=EnhancedPipelineConfig(
+            blast_database="nr",
+            evalue_threshold=1e-10,
+            max_target_seqs=50,
+            uniprot_fields=["function", "pathway", "domain", "subcellular_location"],
+            llm_analysis_depth=AnalysisDepth.DETAILED,
+            llm_max_tokens=1500
+        ),
+        estimated_duration_minutes=45,
+        cost_tier=CostTier.MEDIUM,
+        tags=["protein", "function", "annotation", "homology"],
+        use_cases=[
+            "Anotación de proteínas desconocidas",
+            "Predicción de función enzimática",
+            "Análisis de proteínas hipotéticas"
+        ],
+        limitations=[
+            "Requiere secuencia de al menos 50 aminoácidos",
+            "Precisión depende de homólogos en bases de datos"
+        ]
+    ),
+    "fast_homology_search": EnhancedAnalysisTemplate(
+        name="Fast Homology Search",
+        description="Búsqueda rápida de homología con análisis básico",
+        protocol_type=PromptProtocolType.SEQUENCE_ALIGNMENT,
+        default_config=EnhancedPipelineConfig(
+            blast_database="nr",
+            evalue_threshold=1e-5,
+            max_target_seqs=20,
+            uniprot_fields=["function"],
+            llm_analysis_depth=AnalysisDepth.BASIC,
+            llm_max_tokens=500,
+            max_concurrent_sequences=10
+        ),
+        estimated_duration_minutes=15,
+        cost_tier=CostTier.LOW,
+        tags=["homology", "fast", "screening"],
+        use_cases=[
+            "Screening inicial de secuencias",
+            "Identificación rápida de familias",
+            "Control de calidad de secuencias"
+        ],
+        limitations=[
+            "Análisis superficial",
+            "Menos precisión que análisis completo"
+        ]
+    ),
+    "comprehensive_protein_analysis": EnhancedAnalysisTemplate(
+        name="Comprehensive Protein Analysis",
+        description="Análisis exhaustivo con predicción estructural y análisis evolutivo",
+        protocol_type=PromptProtocolType.PROTEIN_FUNCTION_ANALYSIS,
+        default_config=EnhancedPipelineConfig(
+            blast_database="nr",
+            evalue_threshold=1e-15,
+            max_target_seqs=100,
+            uniprot_fields=["function", "pathway", "domain", "subcellular_location", "interaction"],
+            llm_analysis_depth=AnalysisDepth.COMPREHENSIVE,
+            llm_max_tokens=3000,
+            max_concurrent_sequences=2
+        ),
+        estimated_duration_minutes=120,
+        cost_tier=CostTier.HIGH,
+        tags=["comprehensive", "structure", "evolution", "interaction"],
+        use_cases=[
+            "Investigación de proteínas clave",
+            "Análisis para publicaciones",
+            "Diseño de experimentos funcionales"
+        ],
+        limitations=[
+            "Requiere tiempo considerable",
+            "Alto costo computacional",
+            "Recomendado solo para proteínas importantes"
+        ]
+    )
+}
+
+# Mantener compatibilidad con plantillas originales
 ANALYSIS_TEMPLATES = {
     "protein_function": AnalysisTemplate(
         name="Protein Function Discovery",
