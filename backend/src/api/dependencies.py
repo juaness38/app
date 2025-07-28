@@ -1,52 +1,81 @@
 # -*- coding: utf-8 -*-
 """
-ASTROFLORA BACKEND - DEPENDENCIAS DE LA API
-LUIS: Dependencias de FastAPI para inyección de servicios.
+ASTROFLORA BACKEND - DEPENDENCIAS MEJORADAS
+LUIS: Dependencias con autenticación robusta y container management.
 """
 import logging
-from fastapi import Depends, HTTPException, status
-from fastapi.security import APIKeyHeader
-from src.container import AppContainer
-from src.config.settings import settings
+from typing import Optional
+from fastapi import HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-# Instancia global del contenedor
-container: AppContainer = None
+from src.container import AppContainer
+
+# Contenedor global
+_container: Optional[AppContainer] = None
+logger = logging.getLogger(__name__)
+
+def set_container(container: AppContainer) -> None:
+    """LUIS: Establece el contenedor global."""
+    global _container
+    _container = container
 
 def get_container() -> AppContainer:
-    """LUIS: Dependencia de FastAPI para obtener el contenedor."""
-    global container
-    if container is None:
+    """LUIS: Obtiene el contenedor de dependencias."""
+    if _container is None:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Contenedor no inicializado"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Application not properly initialized"
         )
-    return container
+    return _container
 
-def set_container(app_container: AppContainer) -> None:
-    """LUIS: Establece el contenedor global."""
-    global container
-    container = app_container
+def get_container_sync() -> AppContainer:
+    """LUIS: Versión síncrona para WebSockets."""
+    return get_container()
 
-# Esquema de seguridad
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+# Security scheme
+security = HTTPBearer(auto_error=False)
 
-async def verify_api_key(api_key: str = Depends(api_key_header)) -> str:
-    """LUIS: Verifica la clave API."""
-    if not api_key:
+async def verify_api_key(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+) -> str:
+    """LUIS: Verifica la API key en el header Authorization."""
+    # Primero intenta obtener de Authorization Bearer
+    if credentials and credentials.credentials:
+        api_key = credentials.credentials
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key required in Authorization header"
+        )
+    
+    # Obtiene container para verificar configuración
+    container = get_container()
+    expected_key = container.settings.ASTROFLORA_API_KEY
+    
+    if api_key != expected_key:
+        logger.warning(f"Invalid API key attempt: {api_key[:10]}...")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key"
+        )
+    
+    return api_key
+
+async def verify_api_key_header(x_api_key: Optional[str] = None) -> str:
+    """LUIS: Verifica API key en header X-API-Key (alternativo)."""
+    if not x_api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Clave API requerida"
         )
     
-    if api_key != settings.ASTROFLORA_API_KEY:
+    container = get_container()
+    expected_key = container.settings.ASTROFLORA_API_KEY
+    
+    if x_api_key != expected_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Clave API inválida"
         )
     
-    return api_key
-
-def get_current_user(api_key: str = Depends(verify_api_key)) -> str:
-    """LUIS: Obtiene el usuario actual (placeholder)."""
-    # Por ahora, devolvemos un usuario dummy
-    return "user_001"
+    return x_api_key
