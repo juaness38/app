@@ -6,7 +6,7 @@ LUIS: Fábrica central mejorada con health checks comprehensivos.
 import logging
 import time
 from typing import Optional, Dict, Any
-import aioredis
+import redis
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.config.settings import Settings
