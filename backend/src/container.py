@@ -116,6 +116,9 @@ class AppContainer:
             open_seconds=self.settings.CIRCUIT_BREAKER_OPEN_SECONDS
         )
         
+        # Inyectar métricas a la factory
+        self.circuit_breaker_factory.set_metrics(self.metrics)
+        
         # Gestión de capacidad
         self.capacity_manager: ICapacityManager = RedisCapacityManager(
             self.redis_client,
