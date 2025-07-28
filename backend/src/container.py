@@ -55,14 +55,14 @@ class AppContainer:
         # Inicializa servicios de ejecución
         self._init_execution_services()
         
-        # Inicializa servicios de IA
+        # Inicializa servicios específicos del pipeline primero
+        self._init_pipeline_services()
+        
+        # Inicializa servicios de IA después (dependen del pipeline)
         self._init_ai_services()
         
         # Inicializa el orquestador principal
         self._init_orchestrator()
-        
-        # Inicializa servicios específicos del pipeline
-        self._init_pipeline_services()
         
         # Inicializa el pipeline científico principal
         self._init_scientific_pipeline()
