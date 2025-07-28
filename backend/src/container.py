@@ -134,9 +134,14 @@ class AppContainer:
         self.logger.info("Servicios de ejecución inicializados")
 
     def _init_ai_services(self):
-        """LUIS: Inicializa servicios de IA mejorados."""
-        # Tool Gateway
-        self.tool_gateway: IToolGateway = BioinformaticsToolGateway(
+        """LUIS: Inicializa servicios de IA mejorados con capacidades agénticas."""
+        # Tool Gateway Agéntico - NUEVA CAPACIDAD FASE 1
+        from src.services.agentic.agentic_gateway import AgenticToolGateway
+        
+        self.tool_gateway: IToolGateway = AgenticToolGateway(
+            self.blast_service,
+            self.uniprot_service,
+            self.driver_ia,  # Se inicializa después, pero se pasa la referencia
             self.circuit_breaker_factory
         )
         
@@ -148,7 +153,11 @@ class AppContainer:
             api_key=self.settings.OPENAI_API_KEY
         )
         
-        self.logger.info("Servicios de IA inicializados")
+        # Actualiza la referencia del LLM service en el tool gateway
+        if hasattr(self.tool_gateway, 'atomic_tools') and 'llm_analysis' in self.tool_gateway.atomic_tools:
+            self.tool_gateway.atomic_tools['llm_analysis'].llm_service = self.driver_ia
+        
+        self.logger.info("Servicios de IA con capacidades agénticas inicializados")
 
     def _init_orchestrator(self):
         """LUIS: Inicializa el orquestador principal mejorado."""
