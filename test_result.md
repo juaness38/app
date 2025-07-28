@@ -100,7 +100,19 @@
 user_problem_statement: "TRANSFORMACIÓN AGÉNTICA ASTROFLORA - FASE 1: COEXISTENCIA Y ESTABILIZACIÓN. Implementación exitosa de capacidades agénticas avanzadas basadas en el diseño del primer científico artificial. Se integraron pipeline científico mejorado, herramientas atómicas, gateway agéntico, configuraciones avanzadas, plantillas predefinidas y endpoints especializados. El sistema mantiene compatibilidad total mientras se prepara para la descomposición atómica completa."
 
 backend:
-  - task: "Modelos de datos con validación biológica avanzada"
+  - task: "Pipeline Científico Agéntico Mejorado"
+    implemented: true
+    working: true
+    file: "backend/src/core/pipeline.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "EnhancedScientificPipeline implementado con configuración agéntica mejorada, validación biológica avanzada, caching configurable, templates de profundidad variable, métricas científicas y compatibilidad total con interfaz existente. Preparado para descomposición atómica."
+
+  - task: "Modelos Agénticos Avanzados"
     implemented: true
     working: true
     file: "backend/src/models/analysis.py"
@@ -110,33 +122,33 @@ backend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Modelos completamente mejorados con validación de secuencias biológicas (proteína/DNA), configuración de pipeline tipada, cache inteligente, cost tracking LLM, plantillas de análisis predefinidas, formato de respuesta API estructurado y query models para búsquedas avanzadas"
+        comment: "Modelos agénticos implementados: EnhancedSequenceData con validación biológica avanzada, EnhancedPipelineConfig con configuración científica completa, ToolResult para herramientas atómicas, EnhancedAnalysisTemplate con plantillas predefinidas y metadatos científicos completos"
 
-  - task: "Configuración con validación avanzada"
+  - task: "Herramientas Atómicas Científicas"
     implemented: true
     working: true
-    file: "backend/src/config/settings.py"
+    file: "backend/src/services/agentic/atomic_tools.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Configuración robusta con validaciones Pydantic para claves API, parámetros de rate limiting, cache TTL, monitoreo, dead letter queue y métodos de verificación de entorno y claves reales"
+        comment: "4 herramientas atómicas implementadas: BlastSearchTool (búsqueda homología), UniProtAnnotationTool (anotaciones funcionales), SequenceFeaturesTool (características computacionales), LLMAnalysisTool (análisis con IA). Cada herramienta con metadatos científicos, evaluación de aplicabilidad y métricas de rendimiento"
 
-  - task: "API principal con middleware enterprise"
+  - task: "Gateway Agéntico con MCP"
     implemented: true
     working: true
-    file: "backend/src/main.py"
+    file: "backend/src/services/agentic/agentic_gateway.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "API mejorada con rate limiting por IP, request ID tracing, logging estructurado, manejo de excepciones con formato APIResponse, middleware avanzado para monitoreo y respuestas estructuradas"
+        comment: "AgenticToolGateway implementado con capacidades MCP, recomendación de herramientas basada en contexto, evaluación de aplicabilidad, métricas comprehensivas, health checks individuales y compatibilidad completa con interfaz IToolGateway existente"
 
-  - task: "Contenedor con health checks comprehensivos"
+  - task: "Contenedor con Inyección Agéntica"
     implemented: true
     working: true
     file: "backend/src/container.py"
@@ -146,31 +158,31 @@ backend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Contenedor mejorado con health checks comprehensivos que prueban todas las dependencias (Redis, MongoDB, DriverIA, Tool Gateway), índices MongoDB automáticos, métricas detalladas y cierre limpio de recursos"
+        comment: "AppContainer actualizado con inicialización de servicios agénticos: AgenticToolGateway reemplaza BioinformaticsToolGateway, EnhancedScientificPipeline con configuración agéntica, referencias circulares resueltas correctamente y health checks comprehensivos"
 
-  - task: "Analysis Worker con resiliencia avanzada"
+  - task: "API Agéntica RESTful"
     implemented: true
     working: true
-    file: "backend/src/services/execution/analysis_worker.py"
+    file: "backend/src/api/routers/agentic.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Worker mejorado con circuit breakers para DriverIA, retry strategy exponencial, monitoreo de recursos (CPU/memoria), cleanup automático, estadísticas detalladas y cierre limpio"
+        comment: "Router agéntico completo con 15+ endpoints especializados: gestión de herramientas atómicas, recomendación de herramientas, validación de configuraciones, plantillas predefinidas, métricas del gateway, capacidades del sistema y health checks. Totalmente integrado en /api/agentic"
 
-  - task: "API de análisis con WebSockets y plantillas"
+  - task: "Aplicación Principal Integrada"
     implemented: true
     working: true
-    file: "backend/src/api/routers/analysis.py"
+    file: "backend/src/main.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Router completamente mejorado con WebSockets para updates en tiempo real, plantillas predefinidas, búsqueda avanzada con filtros, rate limiting por endpoint, gestión de conexiones y análisis desde plantillas"
+        comment: "Aplicación principal actualizada con router agéntico registrado en /api/agentic con tags especializados. Mantiene compatibilidad total con endpoints existentes mientras expone nuevas capacidades agénticas"
 
 frontend:
   - task: "Compatibilidad con backend migrado"
