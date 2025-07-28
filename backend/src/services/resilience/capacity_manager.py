@@ -86,9 +86,14 @@ class RedisCapacityManager(ICapacityManager):
     async def record_job_started(self) -> None:
         """LUIS: Incrementa el contador de trabajos en ejecución."""
         try:
-            current_count = await self.redis.incr(self.concurrent_jobs_key)
-            self.metrics.set_current_capacity(current_count)
-            self.logger.debug(f"Trabajo iniciado. Capacidad: {current_count}/{settings.MAX_CONCURRENT_JOBS}")
+            def _sync_record_started():
+                current_count = self.redis.incr(self.concurrent_jobs_key)
+                self.metrics.set_current_capacity(current_count)
+                self.logger.debug(f"Trabajo iniciado. Capacidad: {current_count}/{settings.MAX_CONCURRENT_JOBS}")
+                return current_count
+            
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, _sync_record_started)
             
         except Exception as e:
             self.logger.error(f"Error registrando inicio de trabajo: {e}")
@@ -96,14 +101,19 @@ class RedisCapacityManager(ICapacityManager):
     async def record_job_finished(self) -> None:
         """LUIS: Decrementa el contador de trabajos en ejecución."""
         try:
-            current_count = await self.redis.decr(self.concurrent_jobs_key)
-            # Aseguramos que no sea negativo
-            if current_count < 0:
-                await self.redis.set(self.concurrent_jobs_key, 0)
-                current_count = 0
-                
-            self.metrics.set_current_capacity(current_count)
-            self.logger.debug(f"Trabajo terminado. Capacidad: {current_count}/{settings.MAX_CONCURRENT_JOBS}")
+            def _sync_record_finished():
+                current_count = self.redis.decr(self.concurrent_jobs_key)
+                # Aseguramos que no sea negativo
+                if current_count < 0:
+                    self.redis.set(self.concurrent_jobs_key, 0)
+                    current_count = 0
+                    
+                self.metrics.set_current_capacity(current_count)
+                self.logger.debug(f"Trabajo terminado. Capacidad: {current_count}/{settings.MAX_CONCURRENT_JOBS}")
+                return current_count
+            
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, _sync_record_finished)
             
         except Exception as e:
             self.logger.error(f"Error registrando fin de trabajo: {e}")
