@@ -149,25 +149,29 @@ class RedisCircuitBreaker(ICircuitBreaker):
     async def get_status(self) -> dict:
         """LUIS: Obtiene el estado actual del circuit breaker."""
         try:
-            state = await self.redis.get(self.state_key)
-            failures = await self.redis.get(self.failure_key)
-            last_failure = await self.redis.get(self.last_failure_key)
+            def _sync_get_status():
+                state = self.redis.get(self.state_key)
+                failures = self.redis.get(self.failure_key)
+                last_failure = self.redis.get(self.last_failure_key)
+                
+                state = state if isinstance(state, str) else state or "CLOSED"
+                failures = int(failures if isinstance(failures, str) else failures or 0)
+                last_failure_time = None
+                
+                if last_failure:
+                    last_failure_time = float(last_failure if isinstance(last_failure, str) else last_failure)
+                
+                return {
+                    "service": self.name,
+                    "state": state,
+                    "failures": failures,
+                    "threshold": settings.CIRCUIT_BREAKER_FAILURE_THRESHOLD,
+                    "last_failure": last_failure_time,
+                    "is_open": state == "OPEN"
+                }
             
-            state = state.decode() if isinstance(state, bytes) else state or "CLOSED"
-            failures = int(failures.decode() if isinstance(failures, bytes) else failures or 0)
-            last_failure_time = None
-            
-            if last_failure:
-                last_failure_time = float(last_failure.decode() if isinstance(last_failure, bytes) else last_failure)
-            
-            return {
-                "service": self.name,
-                "state": state,
-                "failures": failures,
-                "threshold": settings.CIRCUIT_BREAKER_FAILURE_THRESHOLD,
-                "last_failure": last_failure_time,
-                "is_open": state == "OPEN"
-            }
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, _sync_get_status)
             
         except Exception as e:
             self.logger.error(f"Error obteniendo estado: {e}")
