@@ -119,7 +119,7 @@ class AppContainer:
         # Gestión de capacidad
         self.capacity_manager: ICapacityManager = RedisCapacityManager(
             self.redis_client,
-            max_concurrent=self.settings.MAX_CONCURRENT_JOBS
+            self.metrics
         )
         
         self.logger.info("Servicios de resiliencia inicializados")
