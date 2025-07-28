@@ -39,6 +39,14 @@ class JobPayload(BaseModel):
     context_id: str = Field(..., description="ID del contexto de análisis")
     priority: int = Field(5, ge=1, le=10, description="Prioridad del trabajo")
     created_at: datetime = Field(default_factory=datetime.utcnow)
+# === EVENT STORE ENTRY MODEL ===
+class EventStoreEntry(BaseModel):
+    """Entrada en el store de eventos."""
+    context_id: str = Field(..., description="ID del contexto")
+    event_type: str = Field(..., description="Tipo de evento")
+    data: Dict[str, Any] = Field(default_factory=dict, description="Datos del evento")
+    agent: str = Field(..., description="Agente que generó el evento")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
 # === MODELOS BASE MEJORADOS ===
 class SequenceData(BaseModel):
     """Datos de secuencia biológica con validación."""
