@@ -33,31 +33,35 @@ class RedisCircuitBreaker(ICircuitBreaker):
     async def is_open(self) -> bool:
         """LUIS: Comprueba si el circuito está abierto."""
         try:
-            state = await self.redis.get(self.state_key)
-            if not state:
-                # Si no hay estado, asumimos que está cerrado
-                await self.redis.set(self.state_key, "CLOSED")
-                return False
+            def _sync_is_open():
+                state = self.redis.get(self.state_key)
+                if not state:
+                    # Si no hay estado, asumimos que está cerrado
+                    self.redis.set(self.state_key, "CLOSED")
+                    return False
+                    
+                state = state if isinstance(state, str) else state
                 
-            state = state.decode() if isinstance(state, bytes) else state
+                if state == "OPEN":
+                    # Verificamos si ha pasado el tiempo de espera
+                    last_failure = self.redis.get(self.last_failure_key)
+                    if last_failure:
+                        last_failure_time = float(last_failure if isinstance(last_failure, str) else last_failure)
+                        if time.time() - last_failure_time > settings.CIRCUIT_BREAKER_OPEN_SECONDS:
+                            # Pasa a semi-abierto para permitir una prueba
+                            self.redis.set(self.state_key, "HALF_OPEN")
+                            self.logger.info(f"Circuit Breaker para '{self.name}' cambió a HALF_OPEN")
+                            return False
+                    return True
+                    
+                elif state == "HALF_OPEN":
+                    # En semi-abierto, permitimos una llamada de prueba
+                    return False
+                    
+                return False  # CLOSED
             
-            if state == "OPEN":
-                # Verificamos si ha pasado el tiempo de espera
-                last_failure = await self.redis.get(self.last_failure_key)
-                if last_failure:
-                    last_failure_time = float(last_failure.decode() if isinstance(last_failure, bytes) else last_failure)
-                    if time.time() - last_failure_time > settings.CIRCUIT_BREAKER_OPEN_SECONDS:
-                        # Pasa a semi-abierto para permitir una prueba
-                        await self.redis.set(self.state_key, "HALF_OPEN")
-                        self.logger.info(f"Circuit Breaker para '{self.name}' cambió a HALF_OPEN")
-                        return False
-                return True
-                
-            elif state == "HALF_OPEN":
-                # En semi-abierto, permitimos una llamada de prueba
-                return False
-                
-            return False  # CLOSED
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, _sync_is_open)
             
         except Exception as e:
             self.logger.error(f"Error verificando estado del circuit breaker: {e}")
