@@ -227,6 +227,9 @@ class AppContainer:
     async def initialize_resources(self):
         """LUIS: Inicialización asíncrona de recursos mejorada."""
         try:
+            # Inicializar cliente Redis
+            await self._init_redis_client()
+            
             # Asegurar índices de MongoDB
             await self._ensure_mongodb_indexes()
             
@@ -237,6 +240,17 @@ class AppContainer:
             
         except Exception as e:
             self.logger.error(f"Error inicializando recursos: {e}")
+            raise
+
+    async def _init_redis_client(self):
+        """LUIS: Inicializa el cliente Redis de forma asíncrona."""
+        try:
+            import aioredis
+            # Para aioredis 1.3.1
+            self.redis_client = await aioredis.create_redis_pool(self.redis_url)
+            self.logger.info("Cliente Redis inicializado")
+        except Exception as e:
+            self.logger.error(f"Error inicializando Redis: {e}")
             raise
 
     async def _ensure_mongodb_indexes(self):
