@@ -169,7 +169,7 @@ class RedisCircuitBreaker(ICircuitBreaker):
             }
 class CircuitBreakerFactory:
     """
-    LUIS: Factory para crear Circuit Breakers configurados.ç
+    LUIS: Factory para crear Circuit Breakers configurados.
     Implementa el patrón Factory para generar instancias de CircuitBreaker.
     """
     
@@ -186,24 +186,45 @@ class CircuitBreakerFactory:
         self.failure_threshold = failure_threshold
         self.open_seconds = open_seconds
         self.logger = logging.getLogger(__name__)
+        self._metrics = None  # Se inicializa luego
     
-    def create_circuit_breaker(self, service_name: str, metrics: IMetricsService) -> RedisCircuitBreaker:
+    def set_metrics(self, metrics: IMetricsService):
+        """Establece el servicio de métricas."""
+        self._metrics = metrics
+    
+    def __call__(self, service_name: str) -> RedisCircuitBreaker:
+        """
+        Permite usar la factory como una función.
+        
+        Args:
+            service_name: Nombre del servicio a proteger
+            
+        Returns:
+            Instancia configurada de RedisCircuitBreaker
+        """
+        return self.create_circuit_breaker(service_name)
+    
+    def create_circuit_breaker(self, service_name: str) -> RedisCircuitBreaker:
         """
         Crea una nueva instancia de CircuitBreaker para un servicio.
         
         Args:
             service_name: Nombre del servicio a proteger
-            metrics: Servicio de métricas para registrar eventos
             
         Returns:
             Instancia configurada de RedisCircuitBreaker
         """
         self.logger.info(f"Creando Circuit Breaker para servicio: {service_name}")
         
+        # Si no tenemos métricas, creamos un mock simple
+        if not self._metrics:
+            from src.services.observability.metrics_service import PrometheusMetricsService
+            self._metrics = PrometheusMetricsService()
+        
         circuit_breaker = RedisCircuitBreaker(
             service_name=service_name,
             redis_client=self.redis_client,
-            metrics=metrics
+            metrics=self._metrics
         )
         
         return circuit_breaker
