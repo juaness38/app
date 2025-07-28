@@ -70,22 +70,26 @@ class RedisCircuitBreaker(ICircuitBreaker):
     async def record_failure(self) -> None:
         """LUIS: Registra un fallo. Si se supera el umbral, abre el circuito."""
         try:
-            self.metrics.record_external_call_failure(self.name)
+            def _sync_record_failure():
+                self.metrics.record_external_call_failure(self.name)
+                
+                # Incrementa el contador de fallos
+                failures = self.redis.incr(self.failure_key)
+                self.redis.expire(self.failure_key, settings.CIRCUIT_BREAKER_OPEN_SECONDS)
+                
+                # Registra el tiempo del último fallo
+                self.redis.set(self.last_failure_key, str(time.time()))
+                
+                self.logger.warning(f"Fallo registrado para '{self.name}': {failures}/{settings.CIRCUIT_BREAKER_FAILURE_THRESHOLD}")
+                
+                if failures >= settings.CIRCUIT_BREAKER_FAILURE_THRESHOLD:
+                    # Abre el circuito
+                    self.redis.set(self.state_key, "OPEN")
+                    self.redis.expire(self.state_key, settings.CIRCUIT_BREAKER_OPEN_SECONDS)
+                    self.logger.error(f"Circuit Breaker para '{self.name}' está ahora ABIERTO")
             
-            # Incrementa el contador de fallos
-            failures = await self.redis.incr(self.failure_key)
-            await self.redis.expire(self.failure_key, settings.CIRCUIT_BREAKER_OPEN_SECONDS)
-            
-            # Registra el tiempo del último fallo
-            await self.redis.set(self.last_failure_key, str(time.time()))
-            
-            self.logger.warning(f"Fallo registrado para '{self.name}': {failures}/{settings.CIRCUIT_BREAKER_FAILURE_THRESHOLD}")
-            
-            if failures >= settings.CIRCUIT_BREAKER_FAILURE_THRESHOLD:
-                # Abre el circuito
-                await self.redis.set(self.state_key, "OPEN")
-                await self.redis.expire(self.state_key, settings.CIRCUIT_BREAKER_OPEN_SECONDS)
-                self.logger.error(f"Circuit Breaker para '{self.name}' está ahora ABIERTO")
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, _sync_record_failure)
                 
         except Exception as e:
             self.logger.error(f"Error registrando fallo: {e}")
