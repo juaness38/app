@@ -97,12 +97,16 @@ class RedisCircuitBreaker(ICircuitBreaker):
     async def record_success(self) -> None:
         """LUIS: Registra un éxito y cierra el circuito."""
         try:
-            # Limpia los fallos y cierra el circuito
-            await self.redis.delete(self.failure_key)
-            await self.redis.set(self.state_key, "CLOSED")
-            await self.redis.delete(self.last_failure_key)
+            def _sync_record_success():
+                # Limpia los fallos y cierra el circuito
+                self.redis.delete(self.failure_key)
+                self.redis.set(self.state_key, "CLOSED")
+                self.redis.delete(self.last_failure_key)
+                
+                self.logger.debug(f"Éxito registrado para '{self.name}' - Circuit Breaker CERRADO")
             
-            self.logger.debug(f"Éxito registrado para '{self.name}' - Circuit Breaker CERRADO")
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, _sync_record_success)
             
         except Exception as e:
             self.logger.error(f"Error registrando éxito: {e}")
