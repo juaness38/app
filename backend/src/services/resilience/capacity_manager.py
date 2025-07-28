@@ -121,19 +121,23 @@ class RedisCapacityManager(ICapacityManager):
     async def get_current_capacity(self) -> Dict[str, int]:
         """LUIS: Obtiene información actual de capacidad."""
         try:
-            current_jobs = await self.redis.get(self.concurrent_jobs_key)
-            waitlist_size = await self.redis.llen(self.waitlist_key)
+            def _sync_get_capacity():
+                current_jobs = self.redis.get(self.concurrent_jobs_key)
+                waitlist_size = self.redis.llen(self.waitlist_key)
+                
+                current_count = int(current_jobs or 0)
+                waitlist_count = int(waitlist_size or 0)
+                
+                return {
+                    "current_jobs": current_count,
+                    "max_jobs": settings.MAX_CONCURRENT_JOBS,
+                    "available_slots": settings.MAX_CONCURRENT_JOBS - current_count,
+                    "waitlist_size": waitlist_count,
+                    "utilization_percent": (current_count / settings.MAX_CONCURRENT_JOBS) * 100
+                }
             
-            current_count = int(current_jobs or 0)
-            waitlist_count = int(waitlist_size or 0)
-            
-            return {
-                "current_jobs": current_count,
-                "max_jobs": settings.MAX_CONCURRENT_JOBS,
-                "available_slots": settings.MAX_CONCURRENT_JOBS - current_count,
-                "waitlist_size": waitlist_count,
-                "utilization_percent": (current_count / settings.MAX_CONCURRENT_JOBS) * 100
-            }
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, _sync_get_capacity)
             
         except Exception as e:
             self.logger.error(f"Error obteniendo capacidad actual: {e}")
