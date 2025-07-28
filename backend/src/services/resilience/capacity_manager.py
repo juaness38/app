@@ -5,7 +5,8 @@ LUIS: Gestiona la carga del sistema usando Redis para prevenir sobrecarga.
 """
 import logging
 from typing import Optional, Dict
-import redis.asyncio as aioredis
+import asyncio
+import redis
 from src.services.interfaces import ICapacityManager, IMetricsService
 from src.config.settings import settings
 
@@ -15,7 +16,7 @@ class RedisCapacityManager(ICapacityManager):
     Es el guardián que previene sobrecargar el sistema.
     """
     
-    def __init__(self, redis_client: aioredis.Redis, metrics: IMetricsService):
+    def __init__(self, redis_client: redis.Redis, metrics: IMetricsService):
         self.redis = redis_client
         self.metrics = metrics
         self.concurrent_jobs_key = "astroflora:concurrent_jobs"
