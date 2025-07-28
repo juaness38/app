@@ -114,10 +114,14 @@ class RedisCircuitBreaker(ICircuitBreaker):
     async def reset(self) -> None:
         """LUIS: Reinicia manualmente el circuit breaker."""
         try:
-            await self.redis.delete(self.failure_key)
-            await self.redis.delete(self.last_failure_key)
-            await self.redis.set(self.state_key, "CLOSED")
-            self.logger.info(f"Circuit Breaker para '{self.name}' reiniciado manualmente")
+            def _sync_reset():
+                self.redis.delete(self.failure_key)
+                self.redis.delete(self.last_failure_key)
+                self.redis.set(self.state_key, "CLOSED")
+                self.logger.info(f"Circuit Breaker para '{self.name}' reiniciado manualmente")
+            
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, _sync_reset)
             
         except Exception as e:
             self.logger.error(f"Error reiniciando circuit breaker: {e}")
