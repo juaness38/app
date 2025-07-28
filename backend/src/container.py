@@ -362,7 +362,8 @@ class AppContainer:
             # Verifica servicios críticos
             try:
                 # Redis
-                await self.redis_client.ping()
+                loop = asyncio.get_event_loop()
+                await loop.run_in_executor(None, self.redis_client.ping)
                 health_status["services"]["redis"] = "healthy"
             except Exception as e:
                 health_status["services"]["redis"] = f"unhealthy: {str(e)}"
