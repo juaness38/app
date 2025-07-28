@@ -126,11 +126,6 @@ class RedisCircuitBreaker(ICircuitBreaker):
         except Exception as e:
             self.logger.error(f"Error reiniciando circuit breaker: {e}")
 
-    @retry(
-        stop=stop_after_attempt(settings.RETRY_MAX_ATTEMPTS),
-        wait=wait_exponential(multiplier=settings.RETRY_WAIT_MULTIPLIER, min=1, max=10),
-        retry=retry_if_exception_type((httpx.RequestError, httpx.TimeoutException))
-    )
     async def call(self, async_func: Callable, *args, **kwargs) -> Any:
         """LUIS: Ejecuta la llamada protegida por el circuito y los reintentos."""
         if await self.is_open():
