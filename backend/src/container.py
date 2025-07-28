@@ -99,8 +99,7 @@ class AppContainer:
         )
         
         self.event_store: IEventStore = MongoEventStore(
-            self.mongo_client, 
-            self.settings.DB_NAME
+            self.mongo_client
         )
         
         self.logger.info("Servicios de datos inicializados")
