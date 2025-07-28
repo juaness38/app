@@ -95,7 +95,7 @@ class AnalysisTemplate(BaseModel):
     protocol_type: PromptProtocolType
     default_parameters: Dict[str, Any] = Field(default_factory=dict)
     estimated_duration_minutes: int = Field(30, description="Duración estimada")
-    cost_tier: str = Field("medium", regex="^(low|medium|high)$")
+    cost_tier: str = Field("medium", pattern="^(low|medium|high)$")
     tags: List[str] = Field(default_factory=list)
 
 class APIResponse(BaseModel):
