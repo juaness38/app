@@ -4,7 +4,7 @@ ASTROFLORA BACKEND - INTERFACES DE SERVICIOS REFINADAS
 LUIS: Interfaces específicas para cada servicio del sistema.
 """
 from typing import Protocol, Any, Optional, Dict, List
-from src.models.analysis import (
+from models.analysis import (
     AnalysisRequest, AnalysisContext, JobPayload, PromptProtocol, 
     ToolResult, EventStoreEntry, SequenceData, BlastResult, UniProtResult, LLMResult, PipelineResult
 )
