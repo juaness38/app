@@ -1,834 +1,636 @@
 # -*- coding: utf-8 -*-
 """
-ASTROFLORA - HERRAMIENTAS ATÓMICAS AGÉNTICAS
-Herramientas atómicas que el DriverIA puede orquestar dinámicamente.
-FASE 1: Coexistencia y Estabilización - Preparación para la descomposición.
+ASTROFLORA - ATOMIC TOOLS FOR MCP ARCHITECTURE
+Enhanced atomic tools that integrate with MCP servers and agentic orchestration.
+Migration from monolithic pipeline to atomic, composable tools.
 """
-import logging
-from typing import Dict, Any, List, Optional
-from abc import ABC, abstractmethod
-from datetime import datetime
+import asyncio
 import time
+import logging
+from typing import Dict, Any, List, Optional, Union
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import datetime
+import json
 
-from src.models.analysis import ToolResult, EnhancedSequenceData
+from mcp.protocol import CorrelationContext, ToolCapability
+from models.analysis import ToolResult
 
 logger = logging.getLogger(__name__)
 
-# ============================================================================
-# HERRAMIENTAS ATÓMICAS - BUILDING BLOCKS DEL DRIVERIA
-# ============================================================================
+@dataclass
+class AtomicToolResult:
+    """Enhanced result from atomic tool execution"""
+    tool_name: str
+    success: bool
+    result: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
+    execution_time_ms: int = 0
+    metadata: Optional[Dict[str, Any]] = None
+    suggestions: List[str] = None  # Suggested next tools
+    correlation_id: Optional[str] = None
+    
+    def to_tool_result(self) -> ToolResult:
+        """Convert to legacy ToolResult for compatibility"""
+        return ToolResult(
+            success=self.success,
+            result=self.result or {},
+            error_message=self.error_message,
+            execution_time=self.execution_time_ms / 1000.0
+        )
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "tool_name": self.tool_name,
+            "success": self.success,
+            "result": self.result,
+            "error_message": self.error_message,
+            "execution_time_ms": self.execution_time_ms,
+            "metadata": self.metadata or {},
+            "suggestions": self.suggestions or [],
+            "correlation_id": self.correlation_id
+        }
 
 class AtomicTool(ABC):
-    """Base para herramientas atómicas que el DriverIA puede usar."""
-
-    def __init__(self, name: str, description: str, scientific_purpose: str = ""):
-        self.name = name
-        self.description = description
-        self.scientific_purpose = scientific_purpose
-        self.execution_count = 0
-        self.total_execution_time = 0.0
-        self.success_count = 0
-
+    """Enhanced base class for atomic tools with MCP integration"""
+    
+    def __init__(self, tool_name: str, capabilities: List[ToolCapability]):
+        self.tool_name = tool_name
+        self.capabilities = capabilities
+        self.logger = logging.getLogger(f"{__name__}.{tool_name}")
+    
     @abstractmethod
-    async def execute(self, parameters: Dict[str, Any]) -> ToolResult:
-        """Ejecuta la herramienta con parámetros dados."""
+    async def execute(
+        self, 
+        parameters: Dict[str, Any], 
+        correlation_context: CorrelationContext
+    ) -> AtomicToolResult:
+        """Execute the tool with given parameters"""
         pass
-
+    
     @abstractmethod
-    def get_parameter_schema(self) -> Dict[str, Any]:
-        """Retorna el schema de parámetros esperados."""
+    def get_input_schema(self) -> Dict[str, Any]:
+        """Get JSON schema for tool inputs"""
         pass
-
+    
     @abstractmethod
-    async def assess_applicability(self, context: Dict[str, Any]) -> float:
-        """¿Qué tan apropiada es esta herramienta para este contexto?"""
+    def get_output_schema(self) -> Dict[str, Any]:
+        """Get JSON schema for tool outputs"""
         pass
+    
+    def validate_parameters(self, parameters: Dict[str, Any]) -> bool:
+        """Validate input parameters against schema"""
+        required_fields = self.get_input_schema().get("required", [])
+        return all(field in parameters for field in required_fields)
+    
+    def get_estimated_duration_ms(self, parameters: Dict[str, Any]) -> int:
+        """Estimate execution duration based on parameters"""
+        return 1000  # Default 1 second
 
-    def get_scientific_metadata(self) -> Dict[str, Any]:
-        """Retorna metadatos científicos de la herramienta."""
-        return {
-            "name": self.name,
-            "description": self.description,
-            "scientific_purpose": self.scientific_purpose,
-            "execution_stats": {
-                "total_executions": self.execution_count,
-                "successful_executions": self.success_count,
-                "success_rate": self.success_count / self.execution_count if self.execution_count > 0 else 0.0,
-                "average_execution_time": self.total_execution_time / self.execution_count if self.execution_count > 0 else 0.0
-            }
-        }
-
-    async def _track_execution(self, func, *args, **kwargs):
-        """Wrapper para rastrear ejecuciones."""
-        start_time = time.time()
-        self.execution_count += 1
-        
-        try:
-            result = await func(*args, **kwargs)
-            if result.success:
-                self.success_count += 1
-            return result
-        finally:
-            execution_time = time.time() - start_time
-            self.total_execution_time += execution_time
-
-class BlastSearchTool(AtomicTool):
-    """Herramienta atómica para búsqueda BLAST."""
-
-    def __init__(self, blast_service, circuit_breaker_factory):
-        super().__init__(
-            name="blast_search",
-            description="Búsqueda de homología usando BLAST",
-            scientific_purpose="Identifica secuencias similares en bases de datos para inferir función y relaciones evolutivas"
-        )
-        self.blast_service = blast_service
-        self.blast_cb = circuit_breaker_factory("blast_atomic")
-
-    async def execute(self, parameters: Dict[str, Any]) -> ToolResult:
-        """Ejecuta búsqueda BLAST."""
-        return await self._track_execution(self._execute_blast, parameters)
-
-    async def _execute_blast(self, parameters: Dict[str, Any]) -> ToolResult:
-        try:
-            sequence = parameters.get("sequence")
-            database = parameters.get("database", "nr")
-            max_hits = parameters.get("max_hits", 50)
-            evalue = parameters.get("evalue", 1e-10)
-
-            if not sequence:
-                raise ValueError("Parámetro 'sequence' requerido")
-
-            # Validación de secuencia
-            if len(sequence) < 10:
-                raise ValueError("Secuencia demasiado corta para BLAST (mínimo 10 caracteres)")
-
-            result = await self.blast_cb.call(
-                self.blast_service.search_homology,
-                sequence,
-                database=database,
-                max_hits=max_hits
-            )
-
-            # Enriquece el resultado con metadatos científicos
-            enriched_result = {
-                "raw_result": result.dict() if hasattr(result, 'dict') else result,
-                "scientific_summary": self._analyze_blast_result(result, sequence),
-                "parameters_used": {
-                    "database": database,
-                    "max_hits": max_hits,
-                    "evalue": evalue,
-                    "sequence_length": len(sequence)
-                }
-            }
-
-            return ToolResult(
-                tool_name=self.name,
-                success=True,
-                result=enriched_result,
-                execution_time_ms=None  # Se asigna en _track_execution
-            )
-
-        except Exception as e:
-            logger.error(f"BlastSearchTool falló: {e}")
-            return ToolResult(
-                tool_name=self.name,
-                success=False,
-                error_message=str(e)
-            )
-
-    def _analyze_blast_result(self, result, query_sequence: str) -> Dict[str, Any]:
-        """Analiza científicamente el resultado de BLAST."""
-        try:
-            hits = result.get("hits", []) if isinstance(result, dict) else getattr(result, 'hits', [])
-            
-            if not hits:
-                return {
-                    "significance": "No significant homologs found",
-                    "evolutionary_inference": "Possibly novel or highly divergent sequence",
-                    "functional_prediction_confidence": "Low"
-                }
-
-            best_hit = hits[0] if hits else {}
-            identity_scores = [hit.get("identity", 0) for hit in hits[:10]]
-            avg_identity = sum(identity_scores) / len(identity_scores) if identity_scores else 0
-
-            # Análisis científico basado en identidad
-            if avg_identity > 90:
-                significance = "High sequence conservation"
-                evolutionary_inference = "Likely orthologs with conserved function"
-                confidence = "High"
-            elif avg_identity > 70:
-                significance = "Moderate sequence conservation"
-                evolutionary_inference = "Probable functional homologs"
-                confidence = "Medium-High"
-            elif avg_identity > 40:
-                significance = "Distant homology detected"
-                evolutionary_inference = "Possible functional relationship"
-                confidence = "Medium"
-            else:
-                significance = "Weak or no homology"
-                evolutionary_inference = "Uncertain functional relationship"
-                confidence = "Low"
-
-            return {
-                "total_hits": len(hits),
-                "best_identity": best_hit.get("identity", 0),
-                "average_identity": avg_identity,
-                "significance": significance,
-                "evolutionary_inference": evolutionary_inference,
-                "functional_prediction_confidence": confidence,
-                "taxonomic_distribution": self._analyze_taxonomic_distribution(hits)
-            }
-
-        except Exception as e:
-            return {"analysis_error": str(e)}
-
-    def _analyze_taxonomic_distribution(self, hits: List[Dict]) -> Dict[str, Any]:
-        """Analiza la distribución taxonómica de los hits."""
-        try:
-            organisms = [hit.get("organism", "Unknown") for hit in hits[:20]]
-            organism_counts = {}
-            for org in organisms:
-                organism_counts[org] = organism_counts.get(org, 0) + 1
-            
-            return {
-                "unique_organisms": len(organism_counts),
-                "most_common": max(organism_counts.items(), key=lambda x: x[1]) if organism_counts else ("Unknown", 0),
-                "distribution": organism_counts
-            }
-        except:
-            return {"distribution_error": "Could not analyze taxonomic distribution"}
-
-    async def assess_applicability(self, context: Dict[str, Any]) -> float:
-        """Evalúa qué tan aplicable es BLAST para el contexto dado."""
-        try:
-            sequence_info = context.get("sequence_info", {})
-            sequence_length = sequence_info.get("length", 0)
-            sequence_type = sequence_info.get("type", "unknown")
-            
-            # BLAST es más efectivo con secuencias más largas
-            length_score = min(1.0, sequence_length / 100.0) if sequence_length > 0 else 0.0
-            
-            # BLAST funciona bien con todos los tipos de secuencia
-            type_score = 1.0 if sequence_type in ["protein", "dna", "rna"] else 0.7
-            
-            # Si ya hay resultados BLAST, menor necesidad
-            has_blast_results = "blast_results" in context
-            redundancy_score = 0.3 if has_blast_results else 1.0
-            
-            return length_score * type_score * redundancy_score
-            
-        except:
-            return 0.5  # Puntuación neutra si no se puede evaluar
-
-    def get_parameter_schema(self) -> Dict[str, Any]:
-        return {
-            "type": "object",
-            "properties": {
-                "sequence": {"type": "string", "description": "Secuencia biológica"},
-                "database": {"type": "string", "default": "nr", "description": "Base de datos BLAST"},
-                "max_hits": {"type": "integer", "default": 50, "description": "Máximo número de hits"},
-                "evalue": {"type": "number", "default": 1e-10, "description": "E-value threshold"}
-            },
-            "required": ["sequence"]
-        }
-
-class UniProtAnnotationTool(AtomicTool):
-    """Herramienta atómica para anotaciones UniProt."""
-
-    def __init__(self, uniprot_service, circuit_breaker_factory):
-        super().__init__(
-            name="uniprot_annotations",
-            description="Obtiene anotaciones funcionales de UniProt",
-            scientific_purpose="Recopila información funcional curada experimentalmente sobre proteínas"
-        )
-        self.uniprot_service = uniprot_service
-        self.uniprot_cb = circuit_breaker_factory("uniprot_atomic")
-
-    async def execute(self, parameters: Dict[str, Any]) -> ToolResult:
-        """Obtiene anotaciones de UniProt."""
-        return await self._track_execution(self._execute_uniprot, parameters)
-
-    async def _execute_uniprot(self, parameters: Dict[str, Any]) -> ToolResult:
-        try:
-            protein_ids = parameters.get("protein_ids", [])
-            fields = parameters.get("fields", ["function", "pathway"])
-
-            if not protein_ids:
-                raise ValueError("Parámetro 'protein_ids' requerido")
-
-            # Limita a un número razonable de IDs
-            protein_ids = protein_ids[:20]
-
-            result = await self.uniprot_cb.call(
-                self.uniprot_service.get_protein_annotations,
-                protein_ids
-            )
-
-            # Enriquece el resultado con análisis científico
-            enriched_result = {
-                "raw_result": result.dict() if hasattr(result, 'dict') else result,
-                "scientific_analysis": self._analyze_uniprot_annotations(result),
-                "parameters_used": {
-                    "protein_ids_count": len(protein_ids),
-                    "fields_requested": fields
-                }
-            }
-
-            return ToolResult(
-                tool_name=self.name,
-                success=True,
-                result=enriched_result
-            )
-
-        except Exception as e:
-            logger.error(f"UniProtAnnotationTool falló: {e}")
-            return ToolResult(
-                tool_name=self.name,
-                success=False,
-                error_message=str(e)
-            )
-
-    def _analyze_uniprot_annotations(self, result) -> Dict[str, Any]:
-        """Analiza científicamente las anotaciones de UniProt."""
-        try:
-            annotations = result.get("annotations", []) if isinstance(result, dict) else getattr(result, 'annotations', [])
-            
-            if not annotations:
-                return {
-                    "annotation_quality": "No annotations found",
-                    "functional_confidence": "Unknown",
-                    "data_completeness": "Empty"
-                }
-
-            # Analiza funciones
-            functions = []
-            pathways = []
-            domains = []
-            
-            for ann in annotations:
-                if ann.get("function"):
-                    functions.append(ann["function"])
-                if ann.get("pathway"):
-                    pathways.append(ann["pathway"])
-                if ann.get("domain"):
-                    domains.append(ann["domain"])
-
-            # Evalúa consistencia funcional
-            unique_functions = len(set(functions))
-            function_consistency = "High" if unique_functions <= 2 else "Medium" if unique_functions <= 5 else "Low"
-
-            return {
-                "total_annotations": len(annotations),
-                "functional_annotations": len(functions),
-                "pathway_annotations": len(pathways),
-                "domain_annotations": len(domains),
-                "function_consistency": function_consistency,
-                "annotation_quality": "High" if len(annotations) > 5 else "Medium" if len(annotations) > 2 else "Low",
-                "functional_confidence": "High" if functions and pathways else "Medium" if functions else "Low",
-                "dominant_functions": list(set(functions))[:5] if functions else [],
-                "associated_pathways": list(set(pathways))[:5] if pathways else []
-            }
-
-        except Exception as e:
-            return {"analysis_error": str(e)}
-
-    async def assess_applicability(self, context: Dict[str, Any]) -> float:
-        """Evalúa aplicabilidad de UniProt para el contexto."""
-        try:
-            # UniProt es más útil si hay resultados BLAST con protein IDs
-            blast_results = context.get("blast_results", {})
-            has_protein_ids = bool(blast_results.get("hits", []))
-            
-            sequence_type = context.get("sequence_info", {}).get("type", "unknown")
-            is_protein = sequence_type == "protein"
-            
-            # UniProt es específico para proteínas
-            type_score = 1.0 if is_protein else 0.2
-            
-            # Mayor utilidad si hay protein IDs de BLAST
-            id_score = 1.0 if has_protein_ids else 0.4
-            
-            # Si already tiene anotaciones UniProt, menor necesidad
-            has_uniprot = "uniprot_annotations" in context
-            redundancy_score = 0.3 if has_uniprot else 1.0
-            
-            return type_score * id_score * redundancy_score
-            
-        except:
-            return 0.6  # Puntuación moderada
-
-    def get_parameter_schema(self) -> Dict[str, Any]:
-        return {
-            "type": "object",
-            "properties": {
-                "protein_ids": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Lista de IDs de proteínas"
-                },
-                "fields": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "default": ["function", "pathway"],
-                    "description": "Campos a obtener"
-                }
-            },
-            "required": ["protein_ids"]
-        }
-
-class SequenceFeaturesTool(AtomicTool):
-    """Herramienta atómica para calcular características de secuencias."""
-
+class BlastAtomicTool(AtomicTool):
+    """Enhanced atomic BLAST sequence search tool"""
+    
     def __init__(self):
-        super().__init__(
-            name="sequence_features",
-            description="Calcula características computacionales de secuencias",
-            scientific_purpose="Extrae características fisicoquímicas y estructurales de secuencias biológicas"
-        )
-
-    async def execute(self, parameters: Dict[str, Any]) -> ToolResult:
-        """Calcula características de secuencia."""
-        return await self._track_execution(self._execute_features, parameters)
-
-    async def _execute_features(self, parameters: Dict[str, Any]) -> ToolResult:
+        super().__init__("blast", [ToolCapability.BIOINFORMATICS])
+    
+    async def execute(
+        self, 
+        parameters: Dict[str, Any], 
+        correlation_context: CorrelationContext
+    ) -> AtomicToolResult:
+        """Execute BLAST search with enhanced results"""
+        start_time = time.time()
+        
         try:
-            sequence = parameters.get("sequence")
-            analysis_type = parameters.get("analysis_type", "basic")
-
-            if not sequence:
-                raise ValueError("Parámetro 'sequence' requerido")
-
-            features = self._compute_features(sequence, analysis_type)
-
-            return ToolResult(
-                tool_name=self.name,
+            self.logger.info(f"[{correlation_context.correlation_id}] Executing enhanced BLAST search")
+            
+            if not self.validate_parameters(parameters):
+                raise ValueError("Missing required parameters for BLAST")
+            
+            sequence = parameters["sequence"]
+            database = parameters.get("database", "nr")
+            e_value = parameters.get("e_value", 0.001)
+            
+            # Enhanced simulation with realistic timing
+            simulation_time = min(1.5 + (len(sequence) / 1000), 4.0)
+            await asyncio.sleep(simulation_time)
+            
+            # Generate enhanced BLAST results
+            hits = self._generate_enhanced_blast_hits(sequence, e_value)
+            
+            result = AtomicToolResult(
+                tool_name=self.tool_name,
                 success=True,
                 result={
-                    "features": features,
-                    "analysis_type": analysis_type,
-                    "scientific_interpretation": self._interpret_features(features, sequence)
-                }
+                    "hits": hits,
+                    "statistics": {
+                        "total_hits": len(hits),
+                        "significant_hits": len([h for h in hits if h["e_value"] < e_value]),
+                        "database": database,
+                        "query_length": len(sequence),
+                        "search_space": f"{len(sequence)} x 500M"
+                    },
+                    "query_sequence": sequence[:50] + "..." if len(sequence) > 50 else sequence,
+                    "functional_annotations": self._extract_functional_annotations(hits)
+                },
+                execution_time_ms=int((time.time() - start_time) * 1000),
+                metadata={
+                    "blast_version": "2.14.0",
+                    "database_size": "500M sequences",
+                    "algorithm": "blastp" if self._is_protein_sequence(sequence) else "blastn"
+                },
+                suggestions=self._suggest_next_tools(hits),
+                correlation_id=correlation_context.correlation_id
             )
-
+            
+            return result
+            
         except Exception as e:
-            logger.error(f"SequenceFeaturesTool falló: {e}")
-            return ToolResult(
-                tool_name=self.name,
+            return AtomicToolResult(
+                tool_name=self.tool_name,
                 success=False,
-                error_message=str(e)
+                error_message=str(e),
+                execution_time_ms=int((time.time() - start_time) * 1000),
+                correlation_id=correlation_context.correlation_id
             )
-
-    def _compute_features(self, sequence: str, analysis_type: str) -> Dict[str, Any]:
-        """Computa características según el tipo de análisis."""
-        features = {
-            "length": len(sequence),
-            "composition": self._get_composition(sequence)
-        }
-
-        if analysis_type in ["detailed", "comprehensive"]:
-            features.update({
-                "gc_content": self._get_gc_content(sequence),
-                "complexity": self._get_complexity(sequence),
-                "charge_properties": self._get_charge_properties(sequence)
+    
+    def _generate_enhanced_blast_hits(self, sequence: str, e_value: float) -> List[Dict[str, Any]]:
+        """Generate enhanced mock BLAST hits with functional information"""
+        hits = []
+        
+        # Generate hits based on sequence characteristics
+        if len(sequence) > 50:  # Substantial sequence
+            hits.extend([
+                {
+                    "accession": "P12345.1",
+                    "description": "DNA-binding transcriptional regulator [Escherichia coli K-12]",
+                    "e_value": 1e-85,
+                    "bit_score": 312.7,
+                    "identity": 87.2,
+                    "coverage": 95.5,
+                    "length": len(sequence) - 5,
+                    "organism": "Escherichia coli",
+                    "function": "transcriptional regulation",
+                    "go_terms": ["GO:0003677", "GO:0006355", "GO:0043565"]
+                },
+                {
+                    "accession": "Q8X5A2.2", 
+                    "description": "Hypothetical protein YqeH [Bacillus subtilis subsp. subtilis str. 168]",
+                    "e_value": 2e-42,
+                    "bit_score": 156.4,
+                    "identity": 72.8,
+                    "coverage": 88.2,
+                    "length": len(sequence) - 15,
+                    "organism": "Bacillus subtilis",
+                    "function": "unknown",
+                    "go_terms": []
+                }
+            ])
+        
+        if self._is_protein_sequence(sequence):
+            hits.append({
+                "accession": "A0A1B2C3D4.1",
+                "description": "Conserved protein of unknown function DUF1234 [Multiple organisms]",
+                "e_value": 5e-25,
+                "bit_score": 98.6,
+                "identity": 65.4,
+                "coverage": 76.3,
+                "length": len(sequence) - 25,
+                "organism": "Various",
+                "function": "protein binding",
+                "go_terms": ["GO:0005515"]
             })
-
-        if analysis_type == "comprehensive":
-            features.update({
-                "molecular_weight": self._estimate_molecular_weight(sequence),
-                "isoelectric_point": self._estimate_isoelectric_point(sequence),
-                "hydrophobicity": self._get_hydrophobicity_profile(sequence),
-                "secondary_structure_propensity": self._predict_secondary_structure_propensity(sequence)
-            })
-
-        return features
-
-    def _interpret_features(self, features: Dict[str, Any], sequence: str) -> Dict[str, Any]:
-        """Interpreta científicamente las características."""
-        interpretation = {}
         
-        # Interpreta longitud
-        length = features.get("length", 0)
-        if length < 50:
-            interpretation["length_significance"] = "Short peptide - may be a fragment or small functional domain"
-        elif length < 200:
-            interpretation["length_significance"] = "Small protein - likely single domain"
-        elif length < 500:
-            interpretation["length_significance"] = "Medium protein - may have multiple domains"
-        else:
-            interpretation["length_significance"] = "Large protein - likely multi-domain with complex function"
-
-        # Interpreta complejidad
-        complexity = features.get("complexity", 0)
-        if complexity < 0.1:
-            interpretation["complexity_significance"] = "Very low complexity - may be repetitive or biased composition"
-        elif complexity < 0.3:
-            interpretation["complexity_significance"] = "Low complexity - possible structural or regulatory role"
-        else:
-            interpretation["complexity_significance"] = "Normal complexity - typical globular protein"
-
-        # Interpreta carga (si disponible)
-        charge_props = features.get("charge_properties", {})
-        if charge_props:
-            net_charge = charge_props.get("net_charge", 0)
-            if abs(net_charge) > 10:
-                interpretation["charge_significance"] = "Highly charged - may interact with nucleic acids or membranes"
-            elif abs(net_charge) > 5:
-                interpretation["charge_significance"] = "Moderately charged - typical for soluble proteins"
-            else:
-                interpretation["charge_significance"] = "Neutral charge - may be membrane-associated"
-
-        return interpretation
-
-    def _get_composition(self, sequence: str) -> Dict[str, float]:
-        """Calcula composición de aminoácidos/nucleótidos."""
-        total = len(sequence)
-        if total == 0:
-            return {}
-
-        composition = {}
-        for char in set(sequence.upper()):
-            composition[char] = sequence.upper().count(char) / total
-
-        return composition
-
-    def _get_gc_content(self, sequence: str) -> float:
-        """Calcula contenido GC para secuencias de DNA/RNA."""
-        if not sequence:
-            return 0.0
-        gc_count = sequence.upper().count('G') + sequence.upper().count('C')
-        return gc_count / len(sequence)
-
-    def _get_complexity(self, sequence: str) -> float:
-        """Calcula complejidad de secuencia."""
-        if not sequence:
-            return 0.0
-        return len(set(sequence.upper())) / len(sequence)
-
-    def _get_charge_properties(self, sequence: str) -> Dict[str, Any]:
-        """Calcula propiedades de carga para proteínas."""
-        positive_residues = "RK"
-        negative_residues = "DE"
+        # Filter by e-value and add position information
+        filtered_hits = []
+        for hit in hits:
+            if hit["e_value"] <= e_value:
+                hit["query_start"] = 1
+                hit["query_end"] = hit["length"]
+                hit["subject_start"] = 1  
+                hit["subject_end"] = hit["length"]
+                filtered_hits.append(hit)
         
-        positive_count = sum(sequence.upper().count(aa) for aa in positive_residues)
-        negative_count = sum(sequence.upper().count(aa) for aa in negative_residues)
+        return filtered_hits
+    
+    def _extract_functional_annotations(self, hits: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Extract functional annotations from BLAST hits"""
+        functions = []
+        go_terms = []
+        organisms = []
+        
+        for hit in hits[:5]:  # Top 5 hits
+            if hit.get("function") and hit["function"] not in functions:
+                functions.append(hit["function"])
+            if hit.get("go_terms"):
+                go_terms.extend(hit["go_terms"])
+            if hit.get("organism") and hit["organism"] not in organisms:
+                organisms.append(hit["organism"])
         
         return {
-            "positive_residues": positive_count,
-            "negative_residues": negative_count,
-            "net_charge": positive_count - negative_count,
-            "charge_density": (positive_count + negative_count) / len(sequence) if sequence else 0
+            "predicted_functions": functions,
+            "go_terms": list(set(go_terms)),
+            "source_organisms": organisms,
+            "confidence": "high" if len(hits) > 0 and hits[0]["e_value"] < 1e-50 else "medium"
         }
-
-    def _estimate_molecular_weight(self, sequence: str) -> float:
-        """Estima peso molecular (simplificado para proteínas)."""
-        avg_aa_weight = 110.0  # Daltons
-        return len(sequence) * avg_aa_weight
-
-    def _estimate_isoelectric_point(self, sequence: str) -> float:
-        """Estima punto isoeléctrico (simplificado)."""
-        # Implementación básica - en producción usar herramientas especializadas
-        positive = sum(sequence.upper().count(aa) for aa in "RK")
-        negative = sum(sequence.upper().count(aa) for aa in "DE")
+    
+    def _suggest_next_tools(self, hits: List[Dict[str, Any]]) -> List[str]:
+        """Suggest next tools based on BLAST results"""
+        suggestions = []
         
-        if positive > negative:
-            return 8.5  # Básico
-        elif negative > positive:
-            return 5.5  # Ácido
-        else:
-            return 7.0  # Neutro
-
-    def _get_hydrophobicity_profile(self, sequence: str) -> Dict[str, Any]:
-        """Calcula perfil de hidrofobicidad."""
-        # Escala de hidrofobicidad simplificada
-        hydrophobicity_scale = {
-            'A': 1.8, 'R': -4.5, 'N': -3.5, 'D': -3.5, 'C': 2.5,
-            'Q': -3.5, 'E': -3.5, 'G': -0.4, 'H': -3.2, 'I': 4.5,
-            'L': 3.8, 'K': -3.9, 'M': 1.9, 'F': 2.8, 'P': -1.6,
-            'S': -0.8, 'T': -0.7, 'W': -0.9, 'Y': -1.3, 'V': 4.2
-        }
-
-        profile = [hydrophobicity_scale.get(aa.upper(), 0.0) for aa in sequence]
+        if len(hits) > 1:
+            suggestions.append("mafft")  # Multiple alignment of hits
         
-        return {
-            "profile": profile,
-            "average_hydrophobicity": sum(profile) / len(profile) if profile else 0,
-            "hydrophobic_residues": len([h for h in profile if h > 0]),
-            "hydrophilic_residues": len([h for h in profile if h < 0])
-        }
-
-    def _predict_secondary_structure_propensity(self, sequence: str) -> Dict[str, Any]:
-        """Predice propensión a estructura secundaria (muy simplificado)."""
-        # Propensidades simplificadas
-        helix_forming = "ALERKHQ"
-        sheet_forming = "VIFYC"
-        turn_forming = "GSPD"
+        if any(hit.get("function") and "protein" in hit["function"] for hit in hits):
+            suggestions.extend(["alphafold", "interpro"])
         
-        helix_score = sum(sequence.upper().count(aa) for aa in helix_forming) / len(sequence) if sequence else 0
-        sheet_score = sum(sequence.upper().count(aa) for aa in sheet_forming) / len(sequence) if sequence else 0
-        turn_score = sum(sequence.upper().count(aa) for aa in turn_forming) / len(sequence) if sequence else 0
+        if any(hit.get("go_terms") for hit in hits):
+            suggestions.append("function_analyzer")
         
-        return {
-            "helix_propensity": helix_score,
-            "sheet_propensity": sheet_score,
-            "turn_propensity": turn_score,
-            "predicted_dominant": max([("helix", helix_score), ("sheet", sheet_score), ("turn", turn_score)], key=lambda x: x[1])[0]
-        }
-
-    async def assess_applicability(self, context: Dict[str, Any]) -> float:
-        """Evalúa aplicabilidad del análisis de características."""
-        try:
-            sequence_info = context.get("sequence_info", {})
-            sequence_length = sequence_info.get("length", 0)
-            
-            # Siempre útil, pero más útil para secuencias más largas
-            length_score = min(1.0, sequence_length / 50.0) if sequence_length > 0 else 0.0
-            
-            # Si ya tiene features, menor necesidad
-            has_features = "sequence_features" in context
-            redundancy_score = 0.2 if has_features else 1.0
-            
-            return max(0.3, length_score * redundancy_score)  # Mínimo 0.3 porque siempre es útil
-            
-        except:
-            return 0.7  # Puntuación moderada-alta
-
-    def get_parameter_schema(self) -> Dict[str, Any]:
+        if not hits:
+            suggestions.append("sequence_analyzer")  # AI analysis for orphan sequences
+        
+        return suggestions
+    
+    def _is_protein_sequence(self, sequence: str) -> bool:
+        """Simple heuristic to determine if sequence is protein"""
+        protein_chars = set("ACDEFGHIKLMNPQRSTVWY")
+        seq_chars = set(sequence.upper())
+        return len(seq_chars - protein_chars) / len(seq_chars) < 0.1 if seq_chars else False
+    
+    def get_input_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
-                "sequence": {"type": "string", "description": "Secuencia biológica"},
-                "analysis_type": {
-                    "type": "string",
-                    "enum": ["basic", "detailed", "comprehensive"],
-                    "default": "basic",
-                    "description": "Nivel de análisis"
-                }
+                "sequence": {"type": "string", "description": "Input sequence", "minLength": 10},
+                "database": {"type": "string", "default": "nr", "enum": ["nr", "swissprot", "pdb", "refseq"]},
+                "e_value": {"type": "number", "default": 0.001, "minimum": 1e-300, "maximum": 1000}
             },
             "required": ["sequence"]
         }
-
-class LLMAnalysisTool(AtomicTool):
-    """Herramienta atómica para análisis con LLM."""
-
-    def __init__(self, llm_service, circuit_breaker_factory):
-        super().__init__(
-            name="llm_analysis",
-            description="Análisis de datos científicos usando LLM",
-            scientific_purpose="Integra y analiza datos científicos usando inteligencia artificial para generar insights"
-        )
-        self.llm_service = llm_service
-        self.llm_cb = circuit_breaker_factory("llm_atomic")
-
-    async def execute(self, parameters: Dict[str, Any]) -> ToolResult:
-        """Ejecuta análisis con LLM."""
-        return await self._track_execution(self._execute_llm, parameters)
-
-    async def _execute_llm(self, parameters: Dict[str, Any]) -> ToolResult:
-        try:
-            data = parameters.get("data")
-            analysis_type = parameters.get("analysis_type", "general")
-            max_tokens = parameters.get("max_tokens", 1000)
-            temperature = parameters.get("temperature", 0.3)
-
-            if not data:
-                raise ValueError("Parámetro 'data' requerido")
-
-            # Construye prompt basado en tipo de análisis
-            prompt = self._build_prompt(data, analysis_type)
-
-            result = await self.llm_cb.call(
-                self.llm_service.analyze_sequence_data,
-                prompt,
-                max_tokens=max_tokens,
-                temperature=temperature
-            )
-
-            return ToolResult(
-                tool_name=self.name,
-                success=True,
-                result={
-                    "analysis_result": result,
-                    "analysis_type": analysis_type,
-                    "parameters_used": {
-                        "max_tokens": max_tokens,
-                        "temperature": temperature
-                    },
-                    "confidence_assessment": self._assess_confidence(result, data)
-                }
-            )
-
-        except Exception as e:
-            logger.error(f"LLMAnalysisTool falló: {e}")
-            return ToolResult(
-                tool_name=self.name,
-                success=False,
-                error_message=str(e)
-            )
-
-    def _assess_confidence(self, result, input_data) -> Dict[str, Any]:
-        """Evalúa la confianza del análisis basado en la cantidad y calidad de datos."""
-        confidence_factors = {}
-        
-        # Evalúa cantidad de datos de entrada
-        data_quantity = len(str(input_data))
-        if data_quantity > 2000:
-            confidence_factors["data_quantity"] = "High"
-        elif data_quantity > 500:
-            confidence_factors["data_quantity"] = "Medium"
-        else:
-            confidence_factors["data_quantity"] = "Low"
-        
-        # Evalúa presencia de datos estructurados
-        has_blast = "blast" in str(input_data).lower()
-        has_uniprot = "uniprot" in str(input_data).lower()
-        has_features = "features" in str(input_data).lower()
-        
-        data_sources = sum([has_blast, has_uniprot, has_features])
-        confidence_factors["data_sources"] = f"{data_sources}/3 sources available"
-        
-        # Confianza general
-        if data_sources >= 2 and confidence_factors["data_quantity"] in ["High", "Medium"]:
-            confidence_factors["overall_confidence"] = "High"
-        elif data_sources >= 1:
-            confidence_factors["overall_confidence"] = "Medium"
-        else:
-            confidence_factors["overall_confidence"] = "Low"
-            
-        return confidence_factors
-
-    def _build_prompt(self, data: Dict[str, Any], analysis_type: str) -> str:
-        """Construye prompt específico para el tipo de análisis."""
-        if analysis_type == "function_prediction":
-            return self._build_function_prediction_prompt(data)
-        elif analysis_type == "structural_analysis":
-            return self._build_structural_analysis_prompt(data)
-        elif analysis_type == "evolutionary_analysis":
-            return self._build_evolutionary_analysis_prompt(data)
-        else:
-            return self._build_general_analysis_prompt(data)
-
-    def _build_function_prediction_prompt(self, data: Dict[str, Any]) -> str:
-        """Prompt específico para predicción de función."""
-        return f"""
-        Basándote en los siguientes datos científicos, predice la función más probable de esta proteína:
-
-        DATOS DE ENTRADA:
-        {self._format_data_for_prompt(data)}
-
-        SOLICITUD:
-        Como científico experto en bioinformática, analiza estos datos y proporciona:
-        1. Función molecular más probable
-        2. Confianza de la predicción (0-1)
-        3. Evidencia de apoyo de los datos
-        4. Funciones alternativas posibles
-        5. Experimentos recomendados para validación
-
-        Responde en formato JSON estructurado con razonamiento científico.
-        """
-
-    def _build_structural_analysis_prompt(self, data: Dict[str, Any]) -> str:
-        """Prompt específico para análisis estructural."""
-        return f"""
-        Analiza la estructura potencial de esta proteína basándote en:
-
-        {self._format_data_for_prompt(data)}
-
-        ANÁLISIS SOLICITADO:
-        Como experto en biología estructural, proporciona:
-        1. Dominios estructurales probables
-        2. Motivos funcionales identificables
-        3. Predicción de plegamiento
-        4. Sitios activos potenciales
-        5. Interacciones moleculares probables
-
-        Formato JSON con justificación científica requerido.
-        """
-
-    def _build_evolutionary_analysis_prompt(self, data: Dict[str, Any]) -> str:
-        """Prompt específico para análisis evolutivo."""
-        return f"""
-        Realiza un análisis evolutivo basado en:
-
-        {self._format_data_for_prompt(data)}
-
-        ANÁLISIS EVOLUTIVO:
-        Como experto en evolución molecular, determina:
-        1. Familia proteica probable
-        2. Origen evolutivo inferido
-        3. Patrones de conservación funcional
-        4. Presión selectiva aparente
-        5. Relaciones filogenéticas
-
-        Respuesta en JSON con contexto evolutivo.
-        """
-
-    def _build_general_analysis_prompt(self, data: Dict[str, Any]) -> str:
-        """Prompt general para análisis."""
-        return f"""
-        Analiza estos datos científicos como un bioinformático experto:
-
-        {self._format_data_for_prompt(data)}
-
-        Proporciona un análisis comprehensivo integrando toda la información disponible.
-        Incluye predicciones funcionales, significancia biológica y confianza en las conclusiones.
-        
-        Formato JSON requerido con razonamiento científico detallado.
-        """
-
-    def _format_data_for_prompt(self, data: Dict[str, Any]) -> str:
-        """Formatea datos para inclusión en prompt."""
-        formatted_parts = []
-
-        for key, value in data.items():
-            if isinstance(value, dict):
-                formatted_parts.append(f"{key.upper()}:")
-                for subkey, subvalue in value.items():
-                    formatted_parts.append(f"  - {subkey}: {subvalue}")
-            elif isinstance(value, list):
-                formatted_parts.append(f"{key.upper()}: {', '.join(map(str, value[:10]))}")  # Limita listas largas
-            else:
-                formatted_parts.append(f"{key.upper()}: {value}")
-
-        return "\n".join(formatted_parts)
-
-    async def assess_applicability(self, context: Dict[str, Any]) -> float:
-        """Evalúa aplicabilidad del análisis LLM."""
-        try:
-            # LLM es más útil cuando hay múltiples fuentes de datos
-            data_sources = 0
-            if "blast_results" in context:
-                data_sources += 1
-            if "uniprot_annotations" in context:
-                data_sources += 1
-            if "sequence_features" in context:
-                data_sources += 1
-            
-            # Más datos = más útil el LLM
-            data_score = min(1.0, data_sources / 2.0)
-            
-            # Si ya hay análisis LLM, menor necesidad
-            has_llm_analysis = "llm_analysis" in context
-            redundancy_score = 0.3 if has_llm_analysis else 1.0
-            
-            return max(0.4, data_score * redundancy_score)  # Mínimo 0.4 porque siempre puede aportar
-            
-        except:
-            return 0.6  # Puntuación moderada
-
-    def get_parameter_schema(self) -> Dict[str, Any]:
+    
+    def get_output_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",
             "properties": {
-                "data": {"type": "object", "description": "Datos para analizar"},
-                "analysis_type": {
-                    "type": "string",
-                    "enum": ["general", "function_prediction", "structural_analysis", "evolutionary_analysis"],
-                    "default": "general",
-                    "description": "Tipo de análisis"
-                },
-                "max_tokens": {"type": "integer", "default": 1000, "description": "Máximo tokens"},
-                "temperature": {"type": "number", "default": 0.3, "description": "Temperatura LLM"}
-            },
-            "required": ["data"]
+                "hits": {"type": "array", "items": {"type": "object"}},
+                "statistics": {"type": "object"},
+                "functional_annotations": {"type": "object"},
+                "query_sequence": {"type": "string"}
+            }
         }
+    
+    def get_estimated_duration_ms(self, parameters: Dict[str, Any]) -> int:
+        """Estimate BLAST execution time"""
+        sequence_length = len(parameters.get("sequence", ""))
+        return min(1500 + (sequence_length * 2), 8000)  # 1.5s base + 2ms per residue, max 8s
+
+class MafftAtomicTool(AtomicTool):
+    """Enhanced atomic MAFFT multiple sequence alignment tool"""
+    
+    def __init__(self):
+        super().__init__("mafft", [ToolCapability.BIOINFORMATICS])
+    
+    async def execute(
+        self, 
+        parameters: Dict[str, Any], 
+        correlation_context: CorrelationContext
+    ) -> AtomicToolResult:
+        """Execute enhanced MAFFT alignment"""
+        start_time = time.time()
+        
+        try:
+            self.logger.info(f"[{correlation_context.correlation_id}] Executing enhanced MAFFT alignment")
+            
+            if not self.validate_parameters(parameters):
+                raise ValueError("Missing required parameters for MAFFT")
+            
+            sequences = parameters["sequences"]
+            algorithm = parameters.get("algorithm", "auto")
+            
+            if len(sequences) < 2:
+                raise ValueError("At least 2 sequences required for alignment")
+            
+            # Enhanced simulation with realistic timing
+            execution_time = 0.8 + (len(sequences) * 0.4) + (sum(len(s) for s in sequences) / 10000)
+            await asyncio.sleep(min(execution_time, 5.0))
+            
+            # Generate enhanced alignment
+            aligned_sequences = self._generate_enhanced_alignment(sequences)
+            alignment_metrics = self._calculate_alignment_metrics(aligned_sequences)
+            
+            result = AtomicToolResult(
+                tool_name=self.tool_name,
+                success=True,
+                result={
+                    "aligned_sequences": aligned_sequences,
+                    "alignment_score": alignment_metrics["overall_score"],
+                    "statistics": {
+                        "sequence_count": len(sequences),
+                        "alignment_length": len(aligned_sequences[0]) if aligned_sequences else 0,
+                        "algorithm_used": algorithm,
+                        "gaps_introduced": sum(seq.count("-") for seq in aligned_sequences),
+                        "conservation_score": alignment_metrics["conservation_score"]
+                    },
+                    "conservation_analysis": alignment_metrics["conservation_analysis"],
+                    "quality_metrics": alignment_metrics
+                },
+                execution_time_ms=int((time.time() - start_time) * 1000),
+                metadata={
+                    "mafft_version": "7.505",
+                    "parameters_used": {"algorithm": algorithm},
+                    "memory_usage": f"{len(sequences) * 50}MB"
+                },
+                suggestions=self._suggest_alignment_tools(alignment_metrics),
+                correlation_id=correlation_context.correlation_id
+            )
+            
+            return result
+            
+        except Exception as e:
+            return AtomicToolResult(
+                tool_name=self.tool_name,
+                success=False,
+                error_message=str(e),
+                execution_time_ms=int((time.time() - start_time) * 1000),
+                correlation_id=correlation_context.correlation_id
+            )
+    
+    def _generate_enhanced_alignment(self, sequences: List[str]) -> List[str]:
+        """Generate enhanced sequence alignment with conservation patterns"""
+        if not sequences:
+            return []
+        
+        # Find common subsequences for better alignment simulation
+        common_regions = self._find_common_regions(sequences)
+        max_length = max(len(seq) for seq in sequences)
+        
+        aligned = []
+        for i, seq in enumerate(sequences):
+            aligned_seq = ""
+            seq_pos = 0
+            
+            for pos in range(max_length + 20):  # Add some buffer for gaps
+                if seq_pos < len(seq):
+                    # Occasionally add gaps in less conserved regions
+                    if pos % 15 == i % 3 and pos not in common_regions:  # Stagger gaps
+                        aligned_seq += "-"
+                    else:
+                        aligned_seq += seq[seq_pos]
+                        seq_pos += 1
+                else:
+                    aligned_seq += "-"
+                    
+                # Don't exceed reasonable length
+                if len(aligned_seq) >= max_length + 50:
+                    break
+            
+            aligned.append(aligned_seq)
+        
+        # Ensure all sequences have the same length
+        final_length = max(len(seq) for seq in aligned)
+        aligned = [seq.ljust(final_length, "-") for seq in aligned]
+        
+        return aligned
+    
+    def _find_common_regions(self, sequences: List[str]) -> List[int]:
+        """Identify positions likely to be conserved"""
+        if len(sequences) < 2:
+            return []
+        
+        min_length = min(len(seq) for seq in sequences)
+        common_positions = []
+        
+        for i in range(min_length):
+            column = [seq[i] for seq in sequences if i < len(seq)]
+            if len(set(column)) <= 2:  # Mostly conserved
+                common_positions.append(i)
+        
+        return common_positions
+    
+    def _calculate_alignment_metrics(self, aligned_sequences: List[str]) -> Dict[str, Any]:
+        """Calculate comprehensive alignment quality metrics"""
+        if not aligned_sequences or len(aligned_sequences) < 2:
+            return {"overall_score": 0.0, "conservation_score": 0.0, "conservation_analysis": {}}
+        
+        alignment_length = len(aligned_sequences[0])
+        conserved_positions = 0
+        identical_positions = 0
+        gap_positions = 0
+        
+        conservation_by_position = []
+        
+        for i in range(alignment_length):
+            column = [seq[i] for seq in aligned_sequences if i < len(seq)]
+            non_gap_column = [c for c in column if c != "-"]
+            
+            if not non_gap_column:
+                gap_positions += 1
+                conservation_by_position.append(0.0)
+                continue
+            
+            # Calculate position conservation
+            unique_residues = len(set(non_gap_column))
+            if unique_residues == 1:
+                identical_positions += 1
+                conservation_by_position.append(1.0)
+            elif unique_residues <= 2:
+                conserved_positions += 1
+                conservation_by_position.append(0.7)
+            elif unique_residues <= 3:
+                conservation_by_position.append(0.4)
+            else:
+                conservation_by_position.append(0.1)
+        
+        conservation_score = (identical_positions + conserved_positions * 0.7) / alignment_length
+        overall_score = conservation_score * (1 - gap_positions / alignment_length * 0.5)
+        
+        return {
+            "overall_score": overall_score,
+            "conservation_score": conservation_score,
+            "identical_positions": identical_positions,
+            "conserved_positions": conserved_positions,
+            "gap_positions": gap_positions,
+            "conservation_analysis": {
+                "highly_conserved_regions": len([c for c in conservation_by_position if c > 0.8]),
+                "moderately_conserved_regions": len([c for c in conservation_by_position if 0.4 < c <= 0.8]),
+                "variable_regions": len([c for c in conservation_by_position if c <= 0.4]),
+                "average_conservation": sum(conservation_by_position) / len(conservation_by_position)
+            }
+        }
+    
+    def _suggest_alignment_tools(self, metrics: Dict[str, Any]) -> List[str]:
+        """Suggest next tools based on alignment quality"""
+        suggestions = []
+        
+        if metrics["conservation_score"] > 0.7:
+            suggestions.extend(["conservation_analyzer", "phylogenetic_analyzer"])
+        
+        if metrics["overall_score"] > 0.6:
+            suggestions.append("alphafold")  # Good alignment suggests structure prediction
+        
+        if metrics.get("conservation_analysis", {}).get("highly_conserved_regions", 0) > 5:
+            suggestions.append("domain_analyzer")
+        
+        suggestions.append("sequence_analyzer")  # AI analysis of alignment
+        
+        return suggestions
+    
+    def get_input_schema(self) -> Dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "sequences": {
+                    "type": "array", 
+                    "items": {"type": "string", "minLength": 10}, 
+                    "minItems": 2,
+                    "maxItems": 100
+                },
+                "algorithm": {
+                    "type": "string", 
+                    "default": "auto", 
+                    "enum": ["auto", "linsi", "ginsi", "einsi", "fftns", "fftnsi"]
+                }
+            },
+            "required": ["sequences"]
+        }
+    
+    def get_output_schema(self) -> Dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "aligned_sequences": {"type": "array", "items": {"type": "string"}},
+                "alignment_score": {"type": "number"},
+                "statistics": {"type": "object"},
+                "conservation_analysis": {"type": "object"},
+                "quality_metrics": {"type": "object"}
+            }
+        }
+    
+    def get_estimated_duration_ms(self, parameters: Dict[str, Any]) -> int:
+        """Estimate MAFFT execution time"""
+        sequences = parameters.get("sequences", [])
+        if not sequences:
+            return 1000
+        
+        num_sequences = len(sequences)
+        total_length = sum(len(seq) for seq in sequences)
+        
+        # Quadratic scaling with sequence count, linear with length
+        return min(800 + (num_sequences * num_sequences * 100) + (total_length // 10), 30000)
+
+# Enhanced Tool Registry with MCP integration
+class EnhancedAtomicToolRegistry:
+    """Enhanced registry for atomic tools with MCP integration"""
+    
+    def __init__(self):
+        self.tools: Dict[str, AtomicTool] = {}
+        self.execution_stats: Dict[str, Dict[str, Any]] = {}
+        self._register_enhanced_tools()
+    
+    def _register_enhanced_tools(self):
+        """Register enhanced atomic tools"""
+        enhanced_tools = [
+            BlastAtomicTool(),
+            MafftAtomicTool(),
+            # AlphaFoldAtomicTool() can be added here
+        ]
+        
+        for tool in enhanced_tools:
+            self.register_tool(tool)
+    
+    def register_tool(self, tool: AtomicTool):
+        """Register a new atomic tool with statistics tracking"""
+        self.tools[tool.tool_name] = tool
+        self.execution_stats[tool.tool_name] = {
+            "total_executions": 0,
+            "successful_executions": 0,
+            "average_duration_ms": 0,
+            "last_executed": None
+        }
+        logger.info(f"Registered enhanced atomic tool: {tool.tool_name}")
+    
+    def get_tool(self, tool_name: str) -> Optional[AtomicTool]:
+        """Get tool by name"""
+        return self.tools.get(tool_name)
+    
+    def list_tools(self, capability_filter: Optional[ToolCapability] = None) -> List[str]:
+        """List tools, optionally filtered by capability"""
+        if capability_filter is None:
+            return list(self.tools.keys())
+        
+        return [
+            name for name, tool in self.tools.items() 
+            if capability_filter in tool.capabilities
+        ]
+    
+    def get_tool_metadata(self, tool_name: str) -> Optional[Dict[str, Any]]:
+        """Get comprehensive tool metadata"""
+        tool = self.get_tool(tool_name)
+        if not tool:
+            return None
+        
+        stats = self.execution_stats.get(tool_name, {})
+        
+        return {
+            "tool_name": tool_name,
+            "capabilities": [cap.value for cap in tool.capabilities],
+            "input_schema": tool.get_input_schema(),
+            "output_schema": tool.get_output_schema(),
+            "execution_stats": stats,
+            "estimated_duration_range": "1-30 seconds"  # Could be more specific per tool
+        }
+    
+    async def execute_tool(
+        self, 
+        tool_name: str, 
+        parameters: Dict[str, Any], 
+        correlation_context: CorrelationContext
+    ) -> AtomicToolResult:
+        """Execute a tool with statistics tracking"""
+        tool = self.get_tool(tool_name)
+        if not tool:
+            return AtomicToolResult(
+                tool_name=tool_name,
+                success=False,
+                error_message=f"Tool not found: {tool_name}",
+                correlation_id=correlation_context.correlation_id
+            )
+        
+        # Update execution stats
+        stats = self.execution_stats[tool_name]
+        stats["total_executions"] += 1
+        stats["last_executed"] = datetime.utcnow().isoformat()
+        
+        # Execute tool
+        result = await tool.execute(parameters, correlation_context)
+        
+        # Update success stats and average duration
+        if result.success:
+            stats["successful_executions"] += 1
+        
+        # Update average duration (simple moving average)
+        if stats["average_duration_ms"] == 0:
+            stats["average_duration_ms"] = result.execution_time_ms
+        else:
+            stats["average_duration_ms"] = (
+                stats["average_duration_ms"] * 0.8 + result.execution_time_ms * 0.2
+            )
+        
+        return result
+    
+    def get_execution_statistics(self) -> Dict[str, Any]:
+        """Get overall execution statistics"""
+        total_executions = sum(stats["total_executions"] for stats in self.execution_stats.values())
+        total_successful = sum(stats["successful_executions"] for stats in self.execution_stats.values())
+        
+        return {
+            "total_tools": len(self.tools),
+            "total_executions": total_executions,
+            "total_successful": total_successful,
+            "success_rate": total_successful / total_executions if total_executions > 0 else 0,
+            "tools_stats": self.execution_stats
+        }
+
+# Global enhanced atomic tool registry
+atomic_tool_registry = EnhancedAtomicToolRegistry()

@@ -19,6 +19,8 @@ from mcp.protocol import (
     AuditLogEntry, HardwareDevice, HardwareDeviceType
 )
 from services.interfaces import IToolGateway, IEventStore
+from services.agentic.atomic_tools import atomic_tool_registry, AtomicToolResult
+from services.hardware.devices import hardware_manager
 from core.exceptions import ToolGatewayException, CircuitBreakerOpenException
 
 logger = logging.getLogger(__name__)
@@ -31,88 +33,29 @@ class MCPToolsServer:
         self.tool_gateway = tool_gateway
         self.event_store = event_store
         self.available_tools: Dict[str, ToolMetadata] = {}
-        self.hardware_devices: Dict[str, HardwareDevice] = {}
         self._initialize_tools()
-        self._initialize_hardware_devices()
         
     def _initialize_tools(self):
-        """Initialize available tools metadata"""
-        # Bioinformatics tools
-        bioinformatics_tools = [
-            {
-                "tool_name": "blast",
-                "display_name": "BLAST Sequence Search",
-                "description": "Basic Local Alignment Search Tool for sequence homology",
-                "version": "2.14.0",
-                "capabilities": [ToolCapability.BIOINFORMATICS],
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "sequence": {"type": "string", "description": "Input sequence"},
-                        "database": {"type": "string", "description": "Target database"},
-                        "e_value": {"type": "number", "default": 0.001}
-                    },
-                    "required": ["sequence"]
-                },
-                "output_schema": {
-                    "type": "object",
-                    "properties": {
-                        "hits": {"type": "array", "items": {"type": "object"}},
-                        "statistics": {"type": "object"}
-                    }
-                },
-                "estimated_duration_ms": 5000
-            },
-            {
-                "tool_name": "mafft",
-                "display_name": "MAFFT Multiple Alignment",
-                "description": "Multiple sequence alignment using MAFFT",
-                "version": "7.505",
-                "capabilities": [ToolCapability.BIOINFORMATICS],
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "sequences": {"type": "array", "items": {"type": "string"}},
-                        "algorithm": {"type": "string", "default": "auto"}
-                    },
-                    "required": ["sequences"]
-                },
-                "output_schema": {
-                    "type": "object",
-                    "properties": {
-                        "aligned_sequences": {"type": "array"},
-                        "alignment_score": {"type": "number"}
-                    }
-                },
-                "estimated_duration_ms": 8000
-            },
-            {
-                "tool_name": "alphafold",
-                "display_name": "AlphaFold Structure Prediction",
-                "description": "3D protein structure prediction using AlphaFold",
-                "version": "2.3.0",
-                "capabilities": [ToolCapability.BIOINFORMATICS, ToolCapability.AI_ANALYSIS],
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "sequence": {"type": "string", "description": "Protein sequence"},
-                        "confidence_threshold": {"type": "number", "default": 70}
-                    },
-                    "required": ["sequence"]
-                },
-                "output_schema": {
-                    "type": "object",
-                    "properties": {
-                        "structure": {"type": "object"},
-                        "confidence_scores": {"type": "array"},
-                        "pdb_data": {"type": "string"}
-                    }
-                },
-                "estimated_duration_ms": 15000
-            }
-        ]
+        """Initialize available tools metadata from atomic tool registry"""
+        # Get tools from enhanced atomic tool registry
+        atomic_tools = atomic_tool_registry.list_tools()
         
-        # AI Analysis tools
+        for tool_name in atomic_tools:
+            metadata = atomic_tool_registry.get_tool_metadata(tool_name)
+            if metadata:
+                tool_metadata = ToolMetadata(
+                    tool_name=metadata["tool_name"],
+                    display_name=metadata["tool_name"].replace("_", " ").title(),
+                    description=f"Enhanced atomic {metadata['tool_name']} tool",
+                    version="2.0.0",  # Enhanced version
+                    capabilities=metadata["capabilities"],
+                    input_schema=metadata["input_schema"],
+                    output_schema=metadata["output_schema"],
+                    estimated_duration_ms=5000  # Default estimate
+                )
+                self.available_tools[tool_name] = tool_metadata
+        
+        # Add AI Analysis tools
         ai_tools = [
             {
                 "tool_name": "sequence_analyzer",
@@ -141,54 +84,10 @@ class MCPToolsServer:
             }
         ]
         
-        # Register all tools
-        for tool_data in bioinformatics_tools + ai_tools:
+        # Register AI tools
+        for tool_data in ai_tools:
             tool_metadata = ToolMetadata(**tool_data)
             self.available_tools[tool_metadata.tool_name] = tool_metadata
-            
-    def _initialize_hardware_devices(self):
-        """Initialize mock hardware devices"""
-        devices = [
-            {
-                "device_id": "microscope_01",
-                "device_type": HardwareDeviceType.MICROSCOPE,
-                "name": "Fluorescence Microscope Alpha",
-                "status": "available",
-                "capabilities": ["fluorescence", "brightfield", "phase_contrast"],
-                "parameters": {
-                    "magnification_range": [10, 1000],
-                    "resolution": "0.2μm",
-                    "wavelengths": [405, 488, 561, 640]
-                },
-                "mock_responses": {
-                    "capture_image": {"image_id": "img_{timestamp}", "format": "tiff", "size": "2048x2048"},
-                    "set_magnification": {"current_magnification": "{requested_value}"},
-                    "acquire_stack": {"stack_id": "stack_{timestamp}", "num_slices": "{z_slices}"}
-                }
-            },
-            {
-                "device_id": "thermal_cycler_01",
-                "device_type": HardwareDeviceType.THERMAL_CYCLER,
-                "name": "PCR Thermal Cycler Beta",
-                "status": "available",
-                "capabilities": ["pcr", "gradient_pcr", "real_time_monitoring"],
-                "parameters": {
-                    "temperature_range": [-10, 105],
-                    "accuracy": "±0.1°C",
-                    "ramp_rate": "5°C/s",
-                    "block_volume": "0.2ml"
-                },
-                "mock_responses": {
-                    "run_pcr": {"run_id": "pcr_{timestamp}", "status": "running", "estimated_time": "{cycle_time}"},
-                    "get_temperature": {"current_temp": "{target_temp}", "block_temp": "{target_temp}"},
-                    "set_program": {"program_id": "prog_{timestamp}", "cycles": "{num_cycles}"}
-                }
-            }
-        ]
-        
-        for device_data in devices:
-            device = HardwareDevice(**device_data)
-            self.hardware_devices[device.device_id] = device
 
 # Create router
 router = APIRouter()
@@ -231,9 +130,10 @@ async def list_tools(
                     if any(cap in tool.capabilities for cap in request.filter_capabilities)
                 ]
             
-            # Add hardware tools
+            # Add hardware tools from hardware manager
+            devices = hardware_manager.list_devices()
             hardware_tools = []
-            for device in server.hardware_devices.values():
+            for device in devices:
                 hardware_tool = ToolMetadata(
                     tool_name=f"hardware_{device.device_id}",
                     display_name=f"Hardware: {device.name}",
@@ -306,18 +206,39 @@ async def call_tool(
         try:
             logger.info(f"[{request.correlation_context.correlation_id}] Executing tool: {request.tool_name}")
             
-            # Check if tool exists
-            if request.tool_name.startswith("hardware_"):
+            # Check if tool exists in atomic tool registry
+            if request.tool_name in atomic_tool_registry.list_tools():
+                # Execute via atomic tool registry
+                result = await atomic_tool_registry.execute_tool(
+                    request.tool_name,
+                    request.parameters,
+                    request.correlation_context
+                )
+                
+                if result.success:
+                    execution_time_ms = result.execution_time_ms
+                    tool_result = result.result
+                    tool_version = "2.0.0"  # Enhanced atomic tools version
+                else:
+                    raise ToolGatewayException(f"Atomic tool execution failed: {result.error_message}")
+                
+            elif request.tool_name.startswith("hardware_"):
                 # Hardware tool execution
                 device_id = request.tool_name.replace("hardware_", "")
-                if device_id not in server.hardware_devices:
+                device = hardware_manager.get_device(device_id)
+                if not device:
                     raise HTTPException(status_code=404, detail=f"Hardware device not found: {device_id}")
                 
-                result = await _execute_hardware_tool(server.hardware_devices[device_id], request)
+                result = await hardware_manager.execute_device_action(
+                    device_id,
+                    request.parameters.get("action"),
+                    request.parameters.get("parameters", {})
+                )
+                tool_result = result
                 tool_version = "1.0.0"
                 
             elif request.tool_name in server.available_tools:
-                # Standard tool execution
+                # Legacy tool execution via tool gateway
                 tool_metadata = server.available_tools[request.tool_name]
                 result = await server.tool_gateway.invoke_tool(request.tool_name, request.parameters)
                 tool_version = tool_metadata.version
@@ -325,7 +246,7 @@ async def call_tool(
                 if not result.success:
                     raise ToolGatewayException(f"Tool execution failed: {result.error_message}")
                     
-                result = result.result
+                tool_result = result.result
                 
             else:
                 raise HTTPException(status_code=404, detail=f"Tool not found: {request.tool_name}")
@@ -339,7 +260,7 @@ async def call_tool(
                 operation="tool_call",
                 tool_name=request.tool_name,
                 input_data_hash=str(hash(str(request.parameters))),
-                output_data_hash=str(hash(str(result))),
+                output_data_hash=str(hash(str(tool_result))),
                 success=True,
                 execution_time_ms=execution_time_ms
             )
@@ -356,7 +277,7 @@ async def call_tool(
             
             return ToolCallResponse(
                 success=True,
-                result=result,
+                result=tool_result,
                 execution_time_ms=execution_time_ms,
                 tool_version=tool_version,
                 correlation_context=request.correlation_context,
@@ -428,33 +349,6 @@ async def call_tool(
                 metadata={"audit_id": audit_entry.audit_id if audit_entry else None}
             )
 
-async def _execute_hardware_tool(device: HardwareDevice, request: ToolCallRequest) -> Dict[str, Any]:
-    """Execute hardware device tool with mock responses"""
-    action = request.parameters.get("action")
-    if action not in device.mock_responses:
-        raise HTTPException(status_code=400, detail=f"Invalid action for device: {action}")
-    
-    # Simulate hardware execution time
-    await asyncio.sleep(0.5)
-    
-    # Generate mock response
-    mock_response = device.mock_responses[action].copy()
-    timestamp = str(int(time.time()))
-    
-    # Replace placeholders in mock response
-    for key, value in mock_response.items():
-        if isinstance(value, str):
-            mock_response[key] = value.replace("{timestamp}", timestamp)
-            for param_key, param_value in request.parameters.get("parameters", {}).items():
-                mock_response[key] = mock_response[key].replace(f"{{{param_key}}}", str(param_value))
-    
-    return {
-        "result": mock_response,
-        "device_status": device.status,
-        "device_id": device.device_id,
-        "action_executed": action
-    }
-
 # Health check for MCP Tools Server
 @router.get("/health", summary="Tools Server Health Check")
 async def health_check(server: MCPToolsServer = Depends(get_mcp_tools_server)):
@@ -462,6 +356,8 @@ async def health_check(server: MCPToolsServer = Depends(get_mcp_tools_server)):
     return {
         "status": "healthy",
         "available_tools": len(server.available_tools),
-        "hardware_devices": len(server.hardware_devices),
+        "atomic_tools": len(atomic_tool_registry.list_tools()),
+        "hardware_devices": len(hardware_manager.list_devices()),
+        "execution_stats": atomic_tool_registry.get_execution_statistics(),
         "timestamp": datetime.utcnow().isoformat()
     }
