@@ -511,7 +511,14 @@ async def main():
             # Ejecutar suite específica
             results = await executor.execute_test_suite(args.suite)
             if 'error' not in results:
-                results = {'suites': [results], 'overall_summary': results['summary']}
+                # Wrap single suite result in the expected format
+                results = {
+                    'execution_id': executor.execution_id,
+                    'start_time': executor.start_time.isoformat(),
+                    'config': executor.config,
+                    'suites': [results], 
+                    'overall_summary': results['summary']
+                }
         else:
             # Ejecutar todas las suites
             results = await executor.execute_all_suites()
