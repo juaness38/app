@@ -15,6 +15,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from pathlib import Path
 import httpx
+import aiohttp
 import argparse
 
 # Import enhanced scientific validation
