@@ -1,0 +1,290 @@
+{
+  "execution_id": "72330993",
+  "start_time": "2025-07-30T17:27:24.840207",
+  "config": {
+    "backend_url": "https://251afff3-56b4-4fc5-a73c-120737cf01e1.preview.emergentagent.com",
+    "api_key": "antares-super-secret-key-2024",
+    "timeout": 300,
+    "parallel_execution": false,
+    "verbose": true
+  },
+  "suites": [
+    {
+      "suite_file": "resilience_failure_simulation.yaml",
+      "suite_info": {
+        "name": "Resilience & Failure Simulation Testing",
+        "version": "1.0",
+        "phase": "Fase 1: Coexistencia y Estabilización",
+        "description": "Suite emergente para testing de resiliencia y fallos simulados"
+      },
+      "execution_id": "72330993",
+      "start_time": "2025-07-30T17:27:24.859589",
+      "scenarios": [
+        {
+          "name": "bioinformatics_service_failures",
+          "description": "Simula fallos de servicios externos y valida recovery mechanisms",
+          "priority": "critical",
+          "start_time": "2025-07-30T17:27:24.859618",
+          "test_cases": [
+            {
+              "case_id": "BSF_001",
+              "name": "BLAST Service Degradation",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859626",
+              "execution_time_ms": 0,
+              "details": {
+                "sequence_type": "multi_step"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859635"
+            },
+            {
+              "case_id": "BSF_002",
+              "name": "UniProt Service Circuit Breaker",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859646",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859659"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:27:24.859666"
+        },
+        {
+          "name": "invalid_sequence_handling",
+          "description": "Valida manejo robusto de secuencias malformadas o inválidas",
+          "priority": "high",
+          "start_time": "2025-07-30T17:27:24.859686",
+          "test_cases": [
+            {
+              "case_id": "ISH_001",
+              "name": "Malformed Sequence Input",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859691",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859694"
+            },
+            {
+              "case_id": "ISH_002",
+              "name": "Edge Case Sequence Characteristics",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859702",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859705"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:27:24.859711"
+        },
+        {
+          "name": "concurrent_load_testing",
+          "description": "Valida comportamiento bajo carga concurrente y estrés",
+          "priority": "high",
+          "start_time": "2025-07-30T17:27:24.859722",
+          "test_cases": [
+            {
+              "case_id": "CLT_001",
+              "name": "Concurrent Tool Invocations",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859729",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859732"
+            },
+            {
+              "case_id": "CLT_002",
+              "name": "Capacity Management Under Load",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859748",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859751"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:27:24.859758"
+        },
+        {
+          "name": "fallback_mechanisms",
+          "description": "Valida mecanismos de fallback cuando servicios principales fallan",
+          "priority": "critical",
+          "start_time": "2025-07-30T17:27:24.859771",
+          "test_cases": [
+            {
+              "case_id": "FM_001",
+              "name": "Service Unavailability Fallbacks",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859777",
+              "execution_time_ms": 0,
+              "details": {
+                "validation_type": "internal"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859780"
+            },
+            {
+              "case_id": "FM_002",
+              "name": "Partial Analysis Completion",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859792",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859796"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:27:24.859802"
+        },
+        {
+          "name": "failure_logging_traceability",
+          "description": "Logs deben mantener trazabilidad completa incluso durante fallos",
+          "priority": "high",
+          "start_time": "2025-07-30T17:27:24.859814",
+          "test_cases": [
+            {
+              "case_id": "FLT_001",
+              "name": "Error Logging Completeness",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859820",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859823"
+            },
+            {
+              "case_id": "FLT_002",
+              "name": "End-to-End Traceability During Failures",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859831",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859834"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:27:24.859838"
+        },
+        {
+          "name": "recovery_self_healing",
+          "description": "Capacidades de auto-recuperación del sistema",
+          "priority": "medium",
+          "start_time": "2025-07-30T17:27:24.859850",
+          "test_cases": [
+            {
+              "case_id": "RSH_001",
+              "name": "Automatic Service Recovery",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859857",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859859"
+            },
+            {
+              "case_id": "RSH_002",
+              "name": "Resource Cleanup After Failures",
+              "status": "passed",
+              "start_time": "2025-07-30T17:27:24.859867",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:27:24.859869"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:27:24.859873"
+        }
+      ],
+      "summary": {
+        "total_scenarios": 6,
+        "total_test_cases": 12,
+        "passed_test_cases": 12,
+        "failed_test_cases": 0,
+        "error_test_cases": 0,
+        "success_rate": 100.0
+      },
+      "end_time": "2025-07-30T17:27:24.859881"
+    }
+  ],
+  "overall_summary": {
+    "total_suites": 1,
+    "total_scenarios": 6,
+    "total_test_cases": 12,
+    "passed_test_cases": 12,
+    "failed_test_cases": 0,
+    "error_test_cases": 0,
+    "overall_success_rate": 100.0
+  }
+}
