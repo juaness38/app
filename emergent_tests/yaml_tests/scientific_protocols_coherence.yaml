@@ -219,12 +219,31 @@ scenarios:
               sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
               analysis_type: "comprehensive"
         
-        expected_advanced_features:
-          - "molecular_weight > 0"
-          - "isoelectric_point entre 3.0 y 12.0"
-          - "hydrophobicity profile con valores reales"
-          - "secondary_structure_propensity con helix/sheet/turn"
-          - "predicted_dominant entre ['helix', 'sheet', 'turn']"
+        expected:
+          status_code: 200
+          success: true
+          validation:
+            - type: "json_path"
+              path: "$.results.molecular_weight"
+              criterion:
+                type: "numeric_range"
+                biological_metric: true
+                min: 1000
+                max: 50000
+                tolerance: 0.2
+            - type: "json_path"
+              path: "$.results.isoelectric_point"
+              criterion:
+                type: "numeric_range"
+                biological_metric: true
+                min: 3.0
+                max: 12.0
+                tolerance: 0.1
+            - type: "json_path"
+              path: "$.results.hydrophobicity_profile"
+              criterion:
+                type: "array_length_min"
+                min: 10
 
 # ============================================================================
 # SCENARIO 4: ANÁLISIS LLM Y INTEGRACIÓN DE DATOS
