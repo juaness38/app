@@ -1,0 +1,543 @@
+{
+  "execution_id": "5f332219",
+  "start_time": "2025-07-30T17:25:31.751421",
+  "config": {
+    "backend_url": "https://251afff3-56b4-4fc5-a73c-120737cf01e1.preview.emergentagent.com",
+    "api_key": "antares-super-secret-key-2024",
+    "timeout": 300,
+    "parallel_execution": false,
+    "verbose": true
+  },
+  "suites": [
+    {
+      "suite_file": "scientific_protocols_coherence.yaml",
+      "suite_info": {
+        "name": "Scientific Protocols & Data Coherence Testing",
+        "version": "1.0",
+        "phase": "Fase 1: Coexistencia y Estabilización",
+        "description": "Suite emergente para validación de coherencia científica"
+      },
+      "execution_id": "5f332219",
+      "start_time": "2025-07-30T17:25:31.770497",
+      "scenarios": [
+        {
+          "name": "blast_scientific_coherence",
+          "description": "Resultados BLAST deben incluir información científicamente válida",
+          "priority": "critical",
+          "start_time": "2025-07-30T17:25:31.770520",
+          "test_cases": [
+            {
+              "case_id": "BSC_001",
+              "name": "BLAST Result Structure Validation",
+              "status": "failed",
+              "start_time": "2025-07-30T17:25:31.770529",
+              "execution_time_ms": 5112,
+              "details": {
+                "http_status": 200,
+                "response_headers": {
+                  "content-length": "1178",
+                  "content-type": "application/json",
+                  "date": "Wed, 30 Jul 2025 17:25:31 GMT",
+                  "server": "uvicorn",
+                  "x-request-id": "5907991d-18bf-48ef-acbc-8f3b383c5924",
+                  "via": "1.1 google",
+                  "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+                },
+                "response_data": {
+                  "success": false,
+                  "data": {
+                    "tool_name": "blast_search",
+                    "success": false,
+                    "result": null,
+                    "error_message": "BLAST search failed: 2 validation errors for BlastResult\ncache_key\n  Field required [type=missing, input_value={'query_sequence': 'MKTVR...: 'nr', 'remote': True}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ndatabase_used\n  Field required [type=missing, input_value={'query_sequence': 'MKTVR...: 'nr', 'remote': True}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing",
+                    "execution_time_ms": null,
+                    "timestamp": "2025-07-30T17:25:36.877711"
+                  },
+                  "error": "BLAST search failed: 2 validation errors for BlastResult\ncache_key\n  Field required [type=missing, input_value={'query_sequence': 'MKTVR...: 'nr', 'remote': True}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing\ndatabase_used\n  Field required [type=missing, input_value={'query_sequence': 'MKTVR...: 'nr', 'remote': True}}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing",
+                  "timestamp": "2025-07-30T17:25:36.877799",
+                  "request_id": null
+                }
+              },
+              "errors": [
+                "Expected success=True, got False"
+              ],
+              "scientific_validation": [
+                {
+                  "rule": "raw_result",
+                  "passed": true,
+                  "details": "Scientific validation placeholder"
+                },
+                {
+                  "rule": "scientific_summary",
+                  "passed": true,
+                  "details": "Scientific validation placeholder"
+                },
+                {
+                  "rule": "taxonomic_analysis",
+                  "passed": true,
+                  "details": "Scientific validation placeholder"
+                }
+              ],
+              "end_time": "2025-07-30T17:25:36.883391"
+            },
+            {
+              "case_id": "BSC_002",
+              "name": "BLAST Scientific Analysis Logic",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:36.883433",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:36.883439"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 1,
+            "failed": 1,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:36.883445"
+        },
+        {
+          "name": "uniprot_annotations_integrity",
+          "description": "Anotaciones UniProt deben mantener integridad y coherencia científica",
+          "priority": "critical",
+          "start_time": "2025-07-30T17:25:36.883465",
+          "test_cases": [
+            {
+              "case_id": "UAI_001",
+              "name": "UniProt Annotation Quality Assessment",
+              "status": "failed",
+              "start_time": "2025-07-30T17:25:36.883473",
+              "execution_time_ms": 387,
+              "details": {
+                "http_status": 200,
+                "response_headers": {
+                  "content-length": "727",
+                  "content-type": "application/json",
+                  "date": "Wed, 30 Jul 2025 17:25:36 GMT",
+                  "server": "uvicorn",
+                  "x-request-id": "79ba11e6-3641-419c-9634-f595977302e7",
+                  "via": "1.1 google",
+                  "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+                },
+                "response_data": {
+                  "success": false,
+                  "data": {
+                    "tool_name": "uniprot_annotations",
+                    "success": false,
+                    "result": null,
+                    "error_message": "1 validation error for UniProtResult\ncache_key\n  Field required [type=missing, input_value={'query_ids': ['P04637', ...Swiss-Prot (Simulated)'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing",
+                    "execution_time_ms": null,
+                    "timestamp": "2025-07-30T17:25:37.266875"
+                  },
+                  "error": "1 validation error for UniProtResult\ncache_key\n  Field required [type=missing, input_value={'query_ids': ['P04637', ...Swiss-Prot (Simulated)'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.11/v/missing",
+                  "timestamp": "2025-07-30T17:25:37.266955",
+                  "request_id": null
+                }
+              },
+              "errors": [
+                "Expected success=True, got False"
+              ],
+              "scientific_validation": [
+                {
+                  "rule": "annotation_quality_rules",
+                  "passed": true,
+                  "details": "Scientific validation placeholder"
+                },
+                {
+                  "rule": "functional_consistency",
+                  "passed": true,
+                  "details": "Scientific validation placeholder"
+                },
+                {
+                  "rule": "confidence_assessment",
+                  "passed": true,
+                  "details": "Scientific validation placeholder"
+                }
+              ],
+              "end_time": "2025-07-30T17:25:37.270998"
+            },
+            {
+              "case_id": "UAI_002",
+              "name": "UniProt Data Enrichment Validation",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:37.271037",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:37.271044"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 1,
+            "failed": 1,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:37.271060"
+        },
+        {
+          "name": "sequence_features_computational_accuracy",
+          "description": "Características computacionales deben ser precisas y científicamente interpretables",
+          "priority": "high",
+          "start_time": "2025-07-30T17:25:37.271083",
+          "test_cases": [
+            {
+              "case_id": "SFC_001",
+              "name": "Basic Sequence Features Accuracy",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:37.271090",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:37.271093"
+            },
+            {
+              "case_id": "SFC_002",
+              "name": "Scientific Interpretation Logic",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:37.271103",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:37.271105"
+            },
+            {
+              "case_id": "SFC_003",
+              "name": "Advanced Features Calculation",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:37.271120",
+              "execution_time_ms": 56,
+              "details": {
+                "http_status": 200,
+                "response_headers": {
+                  "content-length": "1787",
+                  "content-type": "application/json",
+                  "date": "Wed, 30 Jul 2025 17:25:36 GMT",
+                  "server": "uvicorn",
+                  "x-request-id": "affddf9d-4507-4887-a4bc-b42e5aa4b4ea",
+                  "via": "1.1 google",
+                  "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+                },
+                "response_data": {
+                  "success": true,
+                  "data": {
+                    "tool_name": "sequence_features",
+                    "success": true,
+                    "result": {
+                      "features": {
+                        "length": 65,
+                        "composition": {
+                          "K": 0.046153846153846156,
+                          "N": 0.015384615384615385,
+                          "V": 0.12307692307692308,
+                          "P": 0.03076923076923077,
+                          "D": 0.015384615384615385,
+                          "Y": 0.046153846153846156,
+                          "I": 0.07692307692307693,
+                          "G": 0.07692307692307693,
+                          "M": 0.015384615384615385,
+                          "R": 0.1076923076923077,
+                          "Q": 0.06153846153846154,
+                          "E": 0.07692307692307693,
+                          "S": 0.09230769230769231,
+                          "T": 0.03076923076923077,
+                          "L": 0.1076923076923077,
+                          "A": 0.07692307692307693
+                        },
+                        "gc_content": 0.07692307692307693,
+                        "complexity": 0.24615384615384617,
+                        "charge_properties": {
+                          "positive_residues": 10,
+                          "negative_residues": 6,
+                          "net_charge": 4,
+                          "charge_density": 0.24615384615384617
+                        },
+                        "molecular_weight": 7150.0,
+                        "isoelectric_point": 8.5,
+                        "hydrophobicity": {
+                          "profile": [
+                            1.9,
+                            -3.9,
+                            -0.7,
+                            4.2,
+                            -4.5,
+                            -3.5,
+                            -3.5,
+                            -4.5,
+                            3.8,
+                            -3.9,
+                            -0.8,
+                            4.5,
+                            4.2,
+                            -4.5,
+                            4.5,
+                            3.8,
+                            -3.5,
+                            -4.5,
+                            -0.8,
+                            -3.9,
+                            -3.5,
+                            -1.6,
+                            4.2,
+                            -0.8,
+                            -0.4,
+                            1.8,
+                            -3.5,
+                            3.8,
+                            1.8,
+                            -3.5,
+                            -3.5,
+                            3.8,
+                            -0.8,
+                            4.2,
+                            -0.8,
+                            -4.5,
+                            -3.5,
+                            4.2,
+                            4.5,
+                            4.2,
+                            -3.5,
+                            -3.5,
+                            4.5,
+                            1.8,
+                            -1.3,
+                            3.8,
+                            -4.5,
+                            -0.8,
+                            3.8,
+                            -0.4,
+                            -1.3,
+                            -3.5,
+                            4.5,
+                            4.2,
+                            1.8,
+                            -0.7,
+                            -1.6,
+                            -4.5,
+                            -0.4,
+                            -1.3,
+                            4.2,
+                            3.8,
+                            1.8,
+                            -0.4,
+                            -0.4
+                          ],
+                          "average_hydrophobicity": -0.05230769230769241,
+                          "hydrophobic_residues": 26,
+                          "hydrophilic_residues": 39
+                        },
+                        "secondary_structure_propensity": {
+                          "helix_propensity": 0.47692307692307695,
+                          "sheet_propensity": 0.24615384615384617,
+                          "turn_propensity": 0.2153846153846154,
+                          "predicted_dominant": "helix"
+                        }
+                      },
+                      "analysis_type": "comprehensive",
+                      "scientific_interpretation": {
+                        "length_significance": "Small protein - likely single domain",
+                        "complexity_significance": "Low complexity - possible structural or regulatory role",
+                        "charge_significance": "Neutral charge - may be membrane-associated"
+                      }
+                    },
+                    "error_message": null,
+                    "execution_time_ms": null,
+                    "timestamp": "2025-07-30T17:25:37.323899"
+                  },
+                  "error": null,
+                  "timestamp": "2025-07-30T17:25:37.323975",
+                  "request_id": null
+                }
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:37.327514"
+            }
+          ],
+          "summary": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:37.327547"
+        },
+        {
+          "name": "llm_analysis_integration_coherence",
+          "description": "Análisis LLM debe integrar coherentemente múltiples fuentes de datos",
+          "priority": "high",
+          "start_time": "2025-07-30T17:25:37.327568",
+          "test_cases": [
+            {
+              "case_id": "LAI_001",
+              "name": "Multi-Source Data Integration",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:37.327587",
+              "execution_time_ms": 1313,
+              "details": {
+                "http_status": 200,
+                "response_headers": {
+                  "content-length": "1211",
+                  "content-type": "application/json",
+                  "date": "Wed, 30 Jul 2025 17:25:36 GMT",
+                  "server": "uvicorn",
+                  "x-request-id": "80ce23fc-9ef1-4a1d-a53a-f60350213dc3",
+                  "via": "1.1 google",
+                  "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+                },
+                "response_data": {
+                  "success": true,
+                  "data": {
+                    "tool_name": "llm_analysis",
+                    "success": true,
+                    "result": {
+                      "analysis_result": {
+                        "function": "Proteína hipotética con actividad enzimática",
+                        "confidence": 0.78,
+                        "findings": [
+                          "Homología significativa encontrada",
+                          "Dominios funcionales identificados",
+                          "Estructura secundaria predicha",
+                          "Conservación evolutiva moderada"
+                        ],
+                        "recommendations": [
+                          "Validación experimental recomendada",
+                          "Análisis de expresión adicional",
+                          "Estudios de función in vitro"
+                        ],
+                        "analysis": "[SIMULADO] Análisis completo basado en: \n        Basándote en los siguientes datos científicos, predice la función más probable de esta prot...",
+                        "metabolic_pathways": [
+                          "Metabolismo de aminoácidos",
+                          "Biosíntesis de proteínas"
+                        ],
+                        "organism_specificity": "Conservada en procariotas",
+                        "structural_features": {
+                          "domains": 2,
+                          "transmembrane_regions": 0,
+                          "signal_peptide": false
+                        }
+                      },
+                      "analysis_type": "function_prediction",
+                      "parameters_used": {
+                        "max_tokens": 1500,
+                        "temperature": 0.3
+                      },
+                      "confidence_assessment": {
+                        "data_quantity": "Low",
+                        "data_sources": "3/3 sources available",
+                        "overall_confidence": "Medium"
+                      }
+                    },
+                    "error_message": null,
+                    "execution_time_ms": null,
+                    "timestamp": "2025-07-30T17:25:38.388839"
+                  },
+                  "error": null,
+                  "timestamp": "2025-07-30T17:25:38.388927",
+                  "request_id": null
+                }
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:38.641566"
+            },
+            {
+              "case_id": "LAI_002",
+              "name": "Analysis Type Specific Prompts",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:38.641607",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:38.641613"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:38.641618"
+        },
+        {
+          "name": "cross_tool_coherence",
+          "description": "Resultados entre herramientas deben ser mutuamente coherentes",
+          "priority": "medium",
+          "start_time": "2025-07-30T17:25:38.641638",
+          "test_cases": [
+            {
+              "case_id": "CTC_001",
+              "name": "Protein Analysis Pipeline Coherence",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:38.641645",
+              "execution_time_ms": 0,
+              "details": {
+                "sequence_type": "multi_step"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:38.641663"
+            },
+            {
+              "case_id": "CTC_002",
+              "name": "Analysis Depth Consistency",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:38.641673",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:38.641676"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:38.641680"
+        }
+      ],
+      "summary": {
+        "total_scenarios": 5,
+        "total_test_cases": 11,
+        "passed_test_cases": 9,
+        "failed_test_cases": 2,
+        "error_test_cases": 0,
+        "success_rate": 81.81818181818183
+      },
+      "end_time": "2025-07-30T17:25:38.641687"
+    }
+  ],
+  "overall_summary": {
+    "total_suites": 1,
+    "total_scenarios": 5,
+    "total_test_cases": 11,
+    "passed_test_cases": 9,
+    "failed_test_cases": 2,
+    "error_test_cases": 0,
+    "overall_success_rate": 81.81818181818183
+  }
+}
