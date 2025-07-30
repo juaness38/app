@@ -190,17 +190,18 @@ scenarios:
         description: "Métricas del gateway deben ser auditables y consistentes"
         
         gateway_audit_test:
-          1. "Reset gateway metrics"
-          2. "Perform series of tool invocations"
-          3. "Query gateway metrics"
-          4. "Cross-validate with individual tool logs"
-          5. "Verify mathematical consistency"
+          steps:
+            - "Reset gateway metrics"
+            - "Perform series of tool invocations" 
+            - "Query gateway metrics"
+            - "Cross-validate with individual tool logs"
+            - "Verify mathematical consistency"
         
-          consistency_checks:
-            - "total_invocations suma de invocaciones individuales"
-            - "success_rate matches individual results"
-            - "tool_performance metrics consistent"
-            - "timestamps align with actual invocations"
+        consistency_checks:
+          - "total_invocations suma de invocaciones individuales"
+          - "success_rate matches individual results"
+          - "tool_performance metrics consistent"
+          - "timestamps align with actual invocations"
 
 # ============================================================================
 # SCENARIO 4: LOGGING BAJO CONDICIONES EXTREMAS
