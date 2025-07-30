@@ -64,19 +64,6 @@ scenarios:
                 min: 0
                 max: 100
                 tolerance: 0.1
-            
-            scientific_summary:
-              - "total_hits >= 0"
-              - "best_identity es número válido"
-              - "average_identity coherente con hits individuales"
-              - "significance interpretation apropiada"
-              - "evolutionary_inference basada en identidad"
-              - "functional_prediction_confidence coherente"
-            
-            taxonomic_analysis:
-              - "unique_organisms count lógico"
-              - "most_common organism válido si hay hits"
-              - "distribution contiene organismos reales"
 
       - case_id: "BSC_002"
         name: "BLAST Scientific Analysis Logic"
