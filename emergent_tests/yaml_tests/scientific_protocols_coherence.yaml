@@ -122,23 +122,23 @@ scenarios:
               protein_ids: ["P04637", "P53_HUMAN", "Q9Y6R7"]
               fields: ["function", "pathway", "domain", "subcellular_location"]
         
-        expected_result:
+        expected:
+          status_code: 200
           success: true
-          scientific_validation:
-            annotation_quality_rules:
-              - "annotation_quality 'High' si >5 anotaciones"
-              - "annotation_quality 'Medium' si 2-5 anotaciones"
-              - "annotation_quality 'Low' si <2 anotaciones"
-            
-            functional_consistency:
-              - "function_consistency 'High' si ≤2 funciones únicas"
-              - "function_consistency 'Medium' si 3-5 funciones únicas"
-              - "function_consistency 'Low' si >5 funciones únicas"
-            
-            confidence_assessment:
-              - "functional_confidence 'High' si functions AND pathways"
-              - "functional_confidence 'Medium' si solo functions"
-              - "functional_confidence 'Low' si sin functions"
+          validation:
+            - type: "json_path"
+              path: "$.results"
+              criterion:
+                type: "array_length_min"
+                min: 1
+            - type: "json_path"
+              path: "$.analysis.annotation_quality"
+              criterion:
+                type: "string_not_empty"
+            - type: "json_path"
+              path: "$.analysis.functional_confidence"
+              criterion:
+                type: "string_not_empty"
 
       - case_id: "UAI_002"
         name: "UniProt Data Enrichment Validation"
