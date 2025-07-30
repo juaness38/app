@@ -15,13 +15,23 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from src.config.settings import settings
-from src.container import AppContainer
-from src.api.dependencies import set_container
-from src.api.routers import analysis, health
-from src.api.routers import agentic  # NUEVO: Router agéntico - Fase 1
-from src.models.analysis import APIResponse
-from src.core.exceptions import (
+# OpenTelemetry imports
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.exporter.prometheus import PrometheusMetricReader
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+from config.settings import settings
+from container import AppContainer
+from api.dependencies import set_container
+from api.routers import analysis, health
+from api.routers import agentic  # NUEVO: Router agéntico - Fase 1
+from mcp.tools import server as mcp_tools_server
+from mcp.data import server as mcp_data_server
+from models.analysis import APIResponse
+from core.exceptions import (
     AstrofloraException, ServiceUnavailableException, 
     AnalysisNotFoundException, DriverIAException,
     ToolGatewayException, CircuitBreakerOpenException,
@@ -41,6 +51,23 @@ def setup_logging() -> None:
     logging.getLogger("botocore").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
 
+def setup_telemetry():
+    """Setup OpenTelemetry tracing for distributed observability"""
+    resource = Resource.create({
+        "service.name": "astroflora-antares",
+        "service.version": settings.PROJECT_VERSION,
+        "environment": settings.ENVIRONMENT
+    })
+    
+    # Configure tracer provider
+    trace.set_tracer_provider(TracerProvider(resource=resource))
+    
+    # Configure instrumentations
+    HTTPXClientInstrumentor().instrument()
+    
+    logger = logging.getLogger(__name__)
+    logger.info("OpenTelemetry tracing configured")
+
 # Rate Limiter
 limiter = Limiter(key_func=get_remote_address)
 
@@ -54,6 +81,9 @@ async def lifespan(app: FastAPI):
     logger.info(f"Entorno: {settings.ENVIRONMENT}")
     
     try:
+        # Setup telemetry first
+        setup_telemetry()
+        
         # Inicializa el contenedor
         container = AppContainer(settings)
         set_container(container)
@@ -61,6 +91,16 @@ async def lifespan(app: FastAPI):
         
         # Inicializa recursos
         await container.initialize_resources()
+        
+        # Initialize MCP servers
+        mcp_tools_server.initialize_mcp_tools_server(
+            container.tool_gateway(), 
+            container.event_store()
+        )
+        mcp_data_server.initialize_mcp_data_server(
+            container.context_manager(), 
+            container.event_store()
+        )
         
         logger.info("✅ Astroflora Antares iniciado exitosamente")
         
@@ -99,6 +139,8 @@ app = FastAPI(
     - **Observabilidad**: Métricas en tiempo real y auditoría completa
     - **Rate Limiting**: Control de tasa por IP y endpoint
     - **Cost Tracking**: Seguimiento de costos de IA
+    - **MCP Integration**: Model Context Protocol para interoperabilidad
+    - **Distributed Tracing**: OpenTelemetry para observabilidad distribuida
     
     ## Tipos de Análisis Disponibles
     
@@ -112,6 +154,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Instrument FastAPI with OpenTelemetry
+FastAPIInstrumentor.instrument_app(app)
 
 # Configura rate limiter
 app.state.limiter = limiter
@@ -256,6 +301,19 @@ app.include_router(
     agentic.router,
     prefix="/api/agentic",
     tags=["🤖 Endpoints Agénticos - Fase 1"]
+)
+
+# MCP Server routers
+app.include_router(
+    mcp_tools_server.router,
+    prefix="/mcp/tools",
+    tags=["🔧 MCP Tools Server"]
+)
+
+app.include_router(
+    mcp_data_server.router,
+    prefix="/mcp/data",
+    tags=["💾 MCP Data Server"]
 )
 
 # === ENDPOINTS PRINCIPALES ===
