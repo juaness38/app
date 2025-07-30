@@ -1,0 +1,1307 @@
+{
+  "execution_id": "c41191b4",
+  "start_time": "2025-07-30T18:12:32.518649",
+  "config": {
+    "backend_url": "https://7b408a56-cb1b-46fc-b3d6-b274ba0c75c5.preview.emergentagent.com",
+    "api_key": "antares-super-secret-key-2024",
+    "timeout": 300,
+    "parallel_execution": false,
+    "verbose": true
+  },
+  "suites": [
+    {
+      "suite_file": "agentic_orchestration_resilience.yaml",
+      "suite_info": {
+        "name": "Agentic Orchestration & Resilience Testing",
+        "version": "1.0",
+        "phase": "Fase 1: Coexistencia y Estabilización",
+        "description": "Suite emergente para testing de lógica agéntica avanzada"
+      },
+      "execution_id": "c41191b4",
+      "start_time": "2025-07-30T18:12:32.546222",
+      "scenarios": [
+        {
+          "name": "intelligent_tool_recommendation",
+          "description": "Valida que el sistema recomiende herramientas apropiadas según contexto científico",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.546240",
+          "test_cases": [
+            {
+              "case_id": "ITR_001",
+              "name": "Protein Function Discovery Context",
+              "status": "failed",
+              "start_time": "2025-07-30T18:12:32.546248",
+              "execution_time_ms": 0,
+              "details": {},
+              "errors": [
+                "HTTP request failed: No module named 'httpcore'"
+              ],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.546718"
+            },
+            {
+              "case_id": "ITR_002",
+              "name": "DNA Sequence Analysis Context",
+              "status": "failed",
+              "start_time": "2025-07-30T18:12:32.546747",
+              "execution_time_ms": 0,
+              "details": {},
+              "errors": [
+                "HTTP request failed: No module named 'httpcore'"
+              ],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.546991"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 0,
+            "failed": 2,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.547009"
+        },
+        {
+          "name": "tool_applicability_coherence",
+          "description": "Valida coherencia en assess_applicability entre diferentes contextos",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.547033",
+          "test_cases": [
+            {
+              "case_id": "TAC_001",
+              "name": "Blast Applicability Logic",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.547040",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.547046"
+            },
+            {
+              "case_id": "TAC_002",
+              "name": "Cross-Tool Applicability Consistency",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.547058",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.547061"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.547068"
+        },
+        {
+          "name": "gateway_metrics_under_load",
+          "description": "Valida precisión de métricas del gateway bajo invocaciones concurrentes",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.547084",
+          "test_cases": [
+            {
+              "case_id": "GMU_001",
+              "name": "Concurrent Tool Invocations",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.547091",
+              "execution_time_ms": 0,
+              "details": {
+                "validation_type": "internal"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.547095"
+            }
+          ],
+          "summary": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.547103"
+        },
+        {
+          "name": "tool_failure_resilience",
+          "description": "Sistema debe manejar gracefully fallos de herramientas individuales",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.547119",
+          "test_cases": [
+            {
+              "case_id": "TFR_001",
+              "name": "Invalid Tool Parameters",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.547126",
+              "execution_time_ms": 0,
+              "details": {
+                "validation_type": "internal"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.547130"
+            },
+            {
+              "case_id": "TFR_002",
+              "name": "Tool Health Degradation",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.547140",
+              "execution_time_ms": 0,
+              "details": {
+                "sequence_type": "multi_step"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.547144"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.547150"
+        },
+        {
+          "name": "dynamic_protocol_orchestration",
+          "description": "Valida capacidad de orquestación dinámica en Fase 1",
+          "priority": "medium",
+          "start_time": "2025-07-30T18:12:32.547165",
+          "test_cases": [
+            {
+              "case_id": "DPO_001",
+              "name": "Template to Atomic Tools Mapping",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.547174",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.547178"
+            }
+          ],
+          "summary": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.547185"
+        }
+      ],
+      "summary": {
+        "total_scenarios": 5,
+        "total_test_cases": 8,
+        "passed_test_cases": 6,
+        "failed_test_cases": 2,
+        "error_test_cases": 0,
+        "success_rate": 75.0
+      },
+      "end_time": "2025-07-30T18:12:32.547204"
+    },
+    {
+      "suite_file": "endpoints_stress_testing.yaml",
+      "suite_info": {
+        "name": "Critical Endpoints Stress & Edge Cases Testing",
+        "version": "1.0",
+        "phase": "Fase 1: Coexistencia y Estabilización",
+        "description": "Suite emergente para testing exhaustivo de endpoints críticos"
+      },
+      "execution_id": "c41191b4",
+      "start_time": "2025-07-30T18:12:32.576482",
+      "scenarios": [
+        {
+          "name": "analysis_endpoints_comprehensive",
+          "description": "Testing exhaustivo de todos los endpoints de análisis bajo estrés",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.576502",
+          "test_cases": [
+            {
+              "case_id": "AEC_001",
+              "name": "Analysis Creation Edge Cases",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576509",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576517"
+            },
+            {
+              "case_id": "AEC_002",
+              "name": "Analysis Status Polling Under Load",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576529",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576533"
+            },
+            {
+              "case_id": "AEC_003",
+              "name": "Batch Analysis Stress Test",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576540",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576542"
+            }
+          ],
+          "summary": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.576547"
+        },
+        {
+          "name": "health_endpoints_stress",
+          "description": "Health endpoints deben mantener performance bajo carga extrema",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.576570",
+          "test_cases": [
+            {
+              "case_id": "HES_001",
+              "name": "Basic Health Check Performance",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576575",
+              "execution_time_ms": 0,
+              "details": {
+                "validation_type": "internal"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576580"
+            },
+            {
+              "case_id": "HES_002",
+              "name": "Detailed Health Check Accuracy",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576589",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576591"
+            },
+            {
+              "case_id": "HES_003",
+              "name": "Metrics Endpoint Performance",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576600",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576603"
+            }
+          ],
+          "summary": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.576609"
+        },
+        {
+          "name": "agentic_endpoints_comprehensive",
+          "description": "Testing exhaustivo de todos los 15+ endpoints agénticos",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.576623",
+          "test_cases": [
+            {
+              "case_id": "AGC_001",
+              "name": "Tools Endpoints Edge Cases",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576629",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576631"
+            },
+            {
+              "case_id": "AGC_002",
+              "name": "Tool Recommendation Sophistication",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576640",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576642"
+            },
+            {
+              "case_id": "AGC_003",
+              "name": "Templates and Configuration Validation",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576651",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576653"
+            }
+          ],
+          "summary": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.576659"
+        },
+        {
+          "name": "extreme_parameters_validation",
+          "description": "Validación de comportamiento con parámetros en valores límite",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.576673",
+          "test_cases": [
+            {
+              "case_id": "EPV_001",
+              "name": "Numeric Parameter Boundaries",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576678",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576681"
+            },
+            {
+              "case_id": "EPV_002",
+              "name": "String Parameter Edge Cases",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576689",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576692"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.576698"
+        },
+        {
+          "name": "concurrency_rate_limiting",
+          "description": "Comportamiento de endpoints bajo alta concurrencia y rate limiting",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.576710",
+          "test_cases": [
+            {
+              "case_id": "CRL_001",
+              "name": "Rate Limiting Effectiveness",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576715",
+              "execution_time_ms": 0,
+              "details": {
+                "validation_type": "internal"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576717"
+            },
+            {
+              "case_id": "CRL_002",
+              "name": "Concurrent Analysis Processing",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576725",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576728"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.576734"
+        },
+        {
+          "name": "auth_stress_testing",
+          "description": "Sistema de autenticación bajo estrés y ataques simulados",
+          "priority": "medium",
+          "start_time": "2025-07-30T18:12:32.576746",
+          "test_cases": [
+            {
+              "case_id": "AST_001",
+              "name": "Authentication Edge Cases",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576751",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576753"
+            },
+            {
+              "case_id": "AST_002",
+              "name": "Brute Force Protection",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.576762",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.576764"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.576770"
+        }
+      ],
+      "summary": {
+        "total_scenarios": 6,
+        "total_test_cases": 15,
+        "passed_test_cases": 15,
+        "failed_test_cases": 0,
+        "error_test_cases": 0,
+        "success_rate": 100.0
+      },
+      "end_time": "2025-07-30T18:12:32.576776"
+    },
+    {
+      "suite_file": "logging_traceability_audit.yaml",
+      "suite_info": {
+        "name": "Logging, Traceability & Audit Testing",
+        "version": "1.0",
+        "phase": "Fase 1: Coexistencia y Estabilización",
+        "description": "Suite emergente para validación de logging y trazabilidad científica"
+      },
+      "execution_id": "c41191b4",
+      "start_time": "2025-07-30T18:12:32.596273",
+      "scenarios": [
+        {
+          "name": "scientific_traceability_end_to_end",
+          "description": "Validar trazabilidad completa desde request inicial hasta resultado final",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.596292",
+          "test_cases": [
+            {
+              "case_id": "STE_001",
+              "name": "Complete Analysis Traceability",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596301",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596307"
+            },
+            {
+              "case_id": "STE_002",
+              "name": "Cross-Session Traceability",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596319",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596322"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.596328"
+        },
+        {
+          "name": "detailed_scientific_logging",
+          "description": "Logs deben contener suficiente detalle científico para reproducibilidad",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.596348",
+          "test_cases": [
+            {
+              "case_id": "DSL_001",
+              "name": "BLAST Invocation Scientific Logging",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596354",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596357"
+            },
+            {
+              "case_id": "DSL_002",
+              "name": "Multi-Tool Analysis Scientific Documentation",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596368",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596381"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.596388"
+        },
+        {
+          "name": "tool_invocation_audit",
+          "description": "Cada invocación de herramienta debe ser completamente auditable",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.596401",
+          "test_cases": [
+            {
+              "case_id": "TIA_001",
+              "name": "Atomic Tool Invocation Audit Trail",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596407",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596410"
+            },
+            {
+              "case_id": "TIA_002",
+              "name": "Gateway Metrics Audit Consistency",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596419",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596422"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.596428"
+        },
+        {
+          "name": "extreme_conditions_logging",
+          "description": "Logging debe mantenerse íntegro bajo condiciones extremas",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.596442",
+          "test_cases": [
+            {
+              "case_id": "ECL_001",
+              "name": "High Volume Logging Performance",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596448",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596451"
+            },
+            {
+              "case_id": "ECL_002",
+              "name": "Error Condition Logging",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596460",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596463"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.596469"
+        },
+        {
+          "name": "reproducibility_compliance",
+          "description": "Logs deben permitir reproducibilidad completa y compliance científico",
+          "priority": "medium",
+          "start_time": "2025-07-30T18:12:32.596482",
+          "test_cases": [
+            {
+              "case_id": "RC_001",
+              "name": "Analysis Reproducibility Test",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596488",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596491"
+            },
+            {
+              "case_id": "RC_002",
+              "name": "Scientific Compliance Documentation",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596500",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596503"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.596508"
+        },
+        {
+          "name": "log_analysis_insights",
+          "description": "Logs deben permitir extracción de insights operacionales y científicos",
+          "priority": "low",
+          "start_time": "2025-07-30T18:12:32.596522",
+          "test_cases": [
+            {
+              "case_id": "LAI_001",
+              "name": "Operational Insights Extraction",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596528",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596531"
+            },
+            {
+              "case_id": "LAI_002",
+              "name": "Scientific Insights Extraction",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.596540",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.596543"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.596548"
+        }
+      ],
+      "summary": {
+        "total_scenarios": 6,
+        "total_test_cases": 12,
+        "passed_test_cases": 12,
+        "failed_test_cases": 0,
+        "error_test_cases": 0,
+        "success_rate": 100.0
+      },
+      "end_time": "2025-07-30T18:12:32.596556"
+    },
+    {
+      "suite_file": "resilience_failure_simulation.yaml",
+      "suite_info": {
+        "name": "Resilience & Failure Simulation Testing",
+        "version": "1.0",
+        "phase": "Fase 1: Coexistencia y Estabilización",
+        "description": "Suite emergente para testing de resiliencia y fallos simulados"
+      },
+      "execution_id": "c41191b4",
+      "start_time": "2025-07-30T18:12:32.614825",
+      "scenarios": [
+        {
+          "name": "bioinformatics_service_failures",
+          "description": "Simula fallos de servicios externos y valida recovery mechanisms",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.614845",
+          "test_cases": [
+            {
+              "case_id": "BSF_001",
+              "name": "BLAST Service Degradation",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.614860",
+              "execution_time_ms": 0,
+              "details": {
+                "sequence_type": "multi_step"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.614868"
+            },
+            {
+              "case_id": "BSF_002",
+              "name": "UniProt Service Circuit Breaker",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.614881",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.614884"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.614889"
+        },
+        {
+          "name": "invalid_sequence_handling",
+          "description": "Valida manejo robusto de secuencias malformadas o inválidas",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.614907",
+          "test_cases": [
+            {
+              "case_id": "ISH_001",
+              "name": "Malformed Sequence Input",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.614914",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.614922"
+            },
+            {
+              "case_id": "ISH_002",
+              "name": "Edge Case Sequence Characteristics",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.614931",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.614933"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.614939"
+        },
+        {
+          "name": "concurrent_load_testing",
+          "description": "Valida comportamiento bajo carga concurrente y estrés",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.614954",
+          "test_cases": [
+            {
+              "case_id": "CLT_001",
+              "name": "Concurrent Tool Invocations",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.614960",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.614963"
+            },
+            {
+              "case_id": "CLT_002",
+              "name": "Capacity Management Under Load",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.614972",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.614974"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.614980"
+        },
+        {
+          "name": "fallback_mechanisms",
+          "description": "Valida mecanismos de fallback cuando servicios principales fallan",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.614993",
+          "test_cases": [
+            {
+              "case_id": "FM_001",
+              "name": "Service Unavailability Fallbacks",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.615000",
+              "execution_time_ms": 0,
+              "details": {
+                "validation_type": "internal"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.615003"
+            },
+            {
+              "case_id": "FM_002",
+              "name": "Partial Analysis Completion",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.615010",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.615012"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.615018"
+        },
+        {
+          "name": "failure_logging_traceability",
+          "description": "Logs deben mantener trazabilidad completa incluso durante fallos",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.615031",
+          "test_cases": [
+            {
+              "case_id": "FLT_001",
+              "name": "Error Logging Completeness",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.615036",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.615038"
+            },
+            {
+              "case_id": "FLT_002",
+              "name": "End-to-End Traceability During Failures",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.615047",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.615050"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.615055"
+        },
+        {
+          "name": "recovery_self_healing",
+          "description": "Capacidades de auto-recuperación del sistema",
+          "priority": "medium",
+          "start_time": "2025-07-30T18:12:32.615069",
+          "test_cases": [
+            {
+              "case_id": "RSH_001",
+              "name": "Automatic Service Recovery",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.615075",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.615077"
+            },
+            {
+              "case_id": "RSH_002",
+              "name": "Resource Cleanup After Failures",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.615086",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.615088"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.615094"
+        }
+      ],
+      "summary": {
+        "total_scenarios": 6,
+        "total_test_cases": 12,
+        "passed_test_cases": 12,
+        "failed_test_cases": 0,
+        "error_test_cases": 0,
+        "success_rate": 100.0
+      },
+      "end_time": "2025-07-30T18:12:32.615101"
+    },
+    {
+      "suite_file": "scientific_protocols_coherence.yaml",
+      "suite_info": {
+        "name": "Scientific Protocols & Data Coherence Testing",
+        "version": "1.0",
+        "phase": "Fase 1: Coexistencia y Estabilización",
+        "description": "Suite emergente para validación de coherencia científica"
+      },
+      "execution_id": "c41191b4",
+      "start_time": "2025-07-30T18:12:32.635545",
+      "scenarios": [
+        {
+          "name": "blast_scientific_coherence",
+          "description": "Resultados BLAST deben incluir información científicamente válida",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.635566",
+          "test_cases": [
+            {
+              "case_id": "BSC_001",
+              "name": "BLAST Result Structure Validation",
+              "status": "failed",
+              "start_time": "2025-07-30T18:12:32.635575",
+              "execution_time_ms": 0,
+              "details": {},
+              "errors": [
+                "HTTP request failed: No module named 'httpcore'"
+              ],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.635975"
+            },
+            {
+              "case_id": "BSC_002",
+              "name": "BLAST Scientific Analysis Logic",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.635999",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636003"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 1,
+            "failed": 1,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.636010"
+        },
+        {
+          "name": "uniprot_annotations_integrity",
+          "description": "Anotaciones UniProt deben mantener integridad y coherencia científica",
+          "priority": "critical",
+          "start_time": "2025-07-30T18:12:32.636030",
+          "test_cases": [
+            {
+              "case_id": "UAI_001",
+              "name": "UniProt Annotation Quality Assessment",
+              "status": "failed",
+              "start_time": "2025-07-30T18:12:32.636037",
+              "execution_time_ms": 0,
+              "details": {},
+              "errors": [
+                "HTTP request failed: No module named 'httpcore'"
+              ],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636318"
+            },
+            {
+              "case_id": "UAI_002",
+              "name": "UniProt Data Enrichment Validation",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.636339",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636343"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 1,
+            "failed": 1,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.636350"
+        },
+        {
+          "name": "sequence_features_computational_accuracy",
+          "description": "Características computacionales deben ser precisas y científicamente interpretables",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.636367",
+          "test_cases": [
+            {
+              "case_id": "SFC_001",
+              "name": "Basic Sequence Features Accuracy",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.636374",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636376"
+            },
+            {
+              "case_id": "SFC_002",
+              "name": "Scientific Interpretation Logic",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.636388",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636391"
+            },
+            {
+              "case_id": "SFC_003",
+              "name": "Advanced Features Calculation",
+              "status": "failed",
+              "start_time": "2025-07-30T18:12:32.636399",
+              "execution_time_ms": 0,
+              "details": {},
+              "errors": [
+                "HTTP request failed: No module named 'httpcore'"
+              ],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636623"
+            }
+          ],
+          "summary": {
+            "total": 3,
+            "passed": 2,
+            "failed": 1,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.636638"
+        },
+        {
+          "name": "llm_analysis_integration_coherence",
+          "description": "Análisis LLM debe integrar coherentemente múltiples fuentes de datos",
+          "priority": "high",
+          "start_time": "2025-07-30T18:12:32.636654",
+          "test_cases": [
+            {
+              "case_id": "LAI_001",
+              "name": "Multi-Source Data Integration",
+              "status": "failed",
+              "start_time": "2025-07-30T18:12:32.636661",
+              "execution_time_ms": 0,
+              "details": {},
+              "errors": [
+                "HTTP request failed: No module named 'httpcore'"
+              ],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636867"
+            },
+            {
+              "case_id": "LAI_002",
+              "name": "Analysis Type Specific Prompts",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.636884",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636887"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 1,
+            "failed": 1,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.636893"
+        },
+        {
+          "name": "cross_tool_coherence",
+          "description": "Resultados entre herramientas deben ser mutuamente coherentes",
+          "priority": "medium",
+          "start_time": "2025-07-30T18:12:32.636909",
+          "test_cases": [
+            {
+              "case_id": "CTC_001",
+              "name": "Protein Analysis Pipeline Coherence",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.636916",
+              "execution_time_ms": 0,
+              "details": {
+                "sequence_type": "multi_step"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636919"
+            },
+            {
+              "case_id": "CTC_002",
+              "name": "Analysis Depth Consistency",
+              "status": "passed",
+              "start_time": "2025-07-30T18:12:32.636928",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T18:12:32.636931"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T18:12:32.636936"
+        }
+      ],
+      "summary": {
+        "total_scenarios": 5,
+        "total_test_cases": 11,
+        "passed_test_cases": 7,
+        "failed_test_cases": 4,
+        "error_test_cases": 0,
+        "success_rate": 63.63636363636363
+      },
+      "end_time": "2025-07-30T18:12:32.636944"
+    }
+  ],
+  "overall_summary": {
+    "total_suites": 5,
+    "total_scenarios": 28,
+    "total_test_cases": 58,
+    "passed_test_cases": 52,
+    "failed_test_cases": 6,
+    "error_test_cases": 0,
+    "overall_success_rate": 89.65517241379311
+  },
+  "end_time": "2025-07-30T18:12:32.636970"
+}
