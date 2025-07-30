@@ -1,0 +1,257 @@
+# ============================================================================
+# ASTROFLORA EMERGENT TEST SUITE 1: LÓGICA AGÉNTICA Y ORQUESTACIÓN
+# ============================================================================
+# Pruebas emergentes para validar la lógica agéntica avanzada,
+# recomendación inteligente de herramientas y orquestación dinámica
+
+test_suite:
+  name: "Agentic Orchestration & Resilience Testing"
+  version: "1.0"
+  phase: "Fase 1: Coexistencia y Estabilización"
+  description: "Suite emergente para testing de lógica agéntica avanzada"
+  
+environment:
+  backend_url: "${REACT_APP_BACKEND_URL}"
+  api_key: "antares-super-secret-key-2024"
+  timeout: 60
+
+# ============================================================================
+# SCENARIO 1: RECOMENDACIÓN INTELIGENTE DE HERRAMIENTAS
+# ============================================================================
+scenarios:
+  - name: "intelligent_tool_recommendation"
+    description: "Valida que el sistema recomiende herramientas apropiadas según contexto científico"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "ITR_001"
+        name: "Protein Function Discovery Context"
+        description: "Contexto de descubrimiento de función proteica debe recomendar BLAST + UniProt + LLM"
+        preconditions:
+          - "Gateway agéntico operativo"
+          - "4 herramientas atómicas disponibles"
+        
+        request:
+          endpoint: "/api/agentic/tools/recommend"
+          method: "POST"
+          payload:
+            context:
+              sequence_info:
+                type: "protein"
+                length: 350
+                source: "novel_organism"
+              analysis_goal: "function_prediction"
+              priority: "high"
+              research_context: "evolutionary_biology"
+            min_score: 0.6
+        
+        expected_result:
+          success: true
+          criteria:
+            - "blast_search aparece en top 3 recomendaciones"
+            - "uniprot_annotations incluido si score > 0.7"
+            - "llm_analysis incluido con score > 0.5"
+            - "sequence_features incluido como complemento"
+            - "Total recomendaciones >= 2"
+        
+        scientific_validation:
+          - "BLAST debe tener score más alto para secuencias >100 residuos"
+          - "UniProt relevante para proteínas vs. DNA/RNA"
+          - "LLM útil cuando hay múltiples fuentes de datos"
+
+      - case_id: "ITR_002"
+        name: "DNA Sequence Analysis Context"
+        description: "Contexto de secuencia DNA debe ajustar recomendaciones apropiadamente"
+        
+        request:
+          endpoint: "/api/agentic/tools/recommend"
+          method: "POST"
+          payload:
+            context:
+              sequence_info:
+                type: "dna"
+                length: 1500
+                gc_content: 0.62
+              analysis_goal: "homology_search"
+              existing_data: ["blast_results"]
+            min_score: 0.4
+        
+        expected_result:
+          success: true
+          criteria:
+            - "blast_search score reducido si ya hay blast_results"
+            - "uniprot_annotations score bajo para DNA"
+            - "sequence_features score alto para análisis computacional"
+            - "Redundancy penalty aplicado correctamente"
+
+# ============================================================================
+# SCENARIO 2: COHERENCIA EN APLICABILIDAD DE HERRAMIENTAS
+# ============================================================================
+  - name: "tool_applicability_coherence"
+    description: "Valida coherencia en assess_applicability entre diferentes contextos"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "TAC_001"
+        name: "Blast Applicability Logic"
+        description: "BLAST debe mostrar aplicabilidad coherente basada en longitud y tipo de secuencia"
+        
+        subtests:
+          - context:
+              sequence_info: {type: "protein", length: 50}
+            expected_blast_score: "< 0.6"
+            reason: "Secuencia corta, menor efectividad BLAST"
+          
+          - context:
+              sequence_info: {type: "protein", length: 200}
+            expected_blast_score: "> 0.8"
+            reason: "Secuencia óptima para BLAST"
+          
+          - context:
+              sequence_info: {type: "unknown", length: 200}
+            expected_blast_score: "0.6-0.8"
+            reason: "Tipo desconocido, penalización moderada"
+          
+          - context:
+              sequence_info: {type: "protein", length: 200}
+              blast_results: {"hits": []}
+            expected_blast_score: "< 0.4"
+            reason: "Redundancy penalty si ya hay resultados BLAST"
+
+      - case_id: "TAC_002"
+        name: "Cross-Tool Applicability Consistency"
+        description: "Aplicabilidad debe ser consistente entre herramientas relacionadas"
+        
+        validation_rules:
+          - "UniProt score alto => sequence_type = protein"
+          - "Si blast_score alto Y protein => uniprot_score debería ser alto"
+          - "LLM score incrementa con número de fuentes de datos"
+          - "Sequence_features siempre >= 0.3 (siempre algo útil)"
+
+# ============================================================================
+# SCENARIO 3: MÉTRICAS DEL GATEWAY BAJO CARGA
+# ============================================================================
+  - name: "gateway_metrics_under_load"
+    description: "Valida precisión de métricas del gateway bajo invocaciones concurrentes"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "GMU_001"
+        name: "Concurrent Tool Invocations"
+        description: "Múltiples invocaciones concurrentes deben mantener métricas precisas"
+        
+        setup:
+          - "Resetear métricas del gateway"
+          - "Verificar métricas en estado inicial"
+        
+        execution:
+          concurrent_requests: 10
+          request_template:
+            endpoint: "/api/agentic/tools/invoke"
+            method: "POST"
+            payload:
+              tool_name: "sequence_features"
+              parameters:
+                sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+        
+        validation:
+          endpoint: "/api/agentic/metrics/gateway"
+          criteria:
+            - "total_invocations == 10"
+            - "successful_invocations + failed_invocations == 10"
+            - "tool_performance['sequence_features']['invocations'] == 10"
+            - "success_rate calculado correctamente"
+            - "metrics timestamp actualizado"
+
+# ============================================================================
+# SCENARIO 4: RESILIENCIA ANTE FALLOS DE HERRAMIENTAS
+# ============================================================================
+  - name: "tool_failure_resilience"
+    description: "Sistema debe manejar gracefully fallos de herramientas individuales"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "TFR_001"
+        name: "Invalid Tool Parameters"
+        description: "Parámetros inválidos deben retornar error estructurado, no crash"
+        
+        failure_scenarios:
+          - tool: "blast_search"
+            invalid_params: {"sequence": ""}
+            expected_error: "Parámetro 'sequence' requerido"
+          
+          - tool: "blast_search"
+            invalid_params: {"sequence": "XYZ"}
+            expected_error: "Secuencia demasiado corta"
+          
+          - tool: "uniprot_annotations"
+            invalid_params: {"protein_ids": []}
+            expected_error: "Parámetro 'protein_ids' requerido"
+          
+          - tool: "sequence_features"
+            invalid_params: {"sequence": None}
+            expected_error: "Parámetro 'sequence' requerido"
+        
+        validation:
+          - "ToolResult.success == false"
+          - "error_message informativo y específico"
+          - "tool_name preservado en respuesta"
+          - "Sistema sigue operativo para otros requests"
+
+      - case_id: "TFR_002"
+        name: "Tool Health Degradation"
+        description: "Health checks deben detectar degradación de herramientas"
+        
+        test_sequence:
+          1. "Verificar todas herramientas healthy inicialmente"
+          2. "Invocar herramienta con parámetros que causen timeout simulado"
+          3. "Verificar health check refleja estado degradado"
+          4. "Confirmar recuperación después de invocación exitosa"
+
+# ============================================================================
+# SCENARIO 5: ORQUESTACIÓN DINÁMICA DE PROTOCOLOS
+# ============================================================================
+  - name: "dynamic_protocol_orchestration"
+    description: "Valida capacidad de orquestación dinámica en Fase 1"
+    priority: "medium"
+    
+    test_cases:
+      - case_id: "DPO_001"
+        name: "Template to Atomic Tools Mapping"
+        description: "Templates deben mapear correctamente a herramientas atómicas"
+        
+        template_validations:
+          - template_id: "protein_function_discovery"
+            expected_tools: ["blast_search", "uniprot_annotations", "llm_analysis"]
+            sequence_requirements: "protein sequence"
+          
+          - template_id: "fast_homology_search"
+            expected_tools: ["blast_search", "sequence_features"]
+            optimization: "speed over depth"
+          
+          - template_id: "comprehensive_protein_analysis"
+            expected_tools: ["blast_search", "uniprot_annotations", "sequence_features", "llm_analysis"]
+            analysis_depth: "comprehensive"
+
+# ============================================================================
+# EXECUTION SETTINGS
+# ============================================================================
+execution:
+  parallel_scenarios: false  # Run sequentially for accuracy
+  cleanup_after_each: true
+  retry_on_failure: 2
+  report_format: "detailed_yaml"
+  
+success_criteria:
+  overall_success_rate: ">= 90%"
+  critical_tests_success_rate: "100%"
+  max_execution_time: "300 seconds"
+
+# ============================================================================
+# REPORTING
+# ============================================================================
+reporting:
+  generate_scientific_analysis: true
+  include_performance_metrics: true
+  failure_analysis_depth: "comprehensive"
+  export_formats: ["yaml", "json", "markdown"]

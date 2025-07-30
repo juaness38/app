@@ -1,0 +1,332 @@
+# ============================================================================
+# ASTROFLORA EMERGENT TEST SUITE 2: PROTOCOLOS CIENTÍFICOS Y COHERENCIA
+# ============================================================================
+# Pruebas emergentes para validar coherencia científica en resultados,
+# integridad de datos bioinformáticos y consistencia de análisis
+
+test_suite:
+  name: "Scientific Protocols & Data Coherence Testing"
+  version: "1.0"
+  phase: "Fase 1: Coexistencia y Estabilización"
+  description: "Suite emergente para validación de coherencia científica"
+  
+environment:
+  backend_url: "${REACT_APP_BACKEND_URL}"
+  api_key: "antares-super-secret-key-2024"
+  timeout: 120
+
+# ============================================================================
+# SCENARIO 1: VALIDACIÓN DE COHERENCIA CIENTÍFICA EN BLAST
+# ============================================================================
+scenarios:
+  - name: "blast_scientific_coherence"
+    description: "Resultados BLAST deben incluir información científicamente válida"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "BSC_001"
+        name: "BLAST Result Structure Validation"
+        description: "Resultado BLAST debe contener alineamientos y metadatos científicos válidos"
+        
+        request:
+          endpoint: "/api/agentic/tools/invoke"
+          method: "POST"
+          payload:
+            tool_name: "blast_search"
+            parameters:
+              sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+              database: "nr"
+              max_hits: 20
+              evalue: 1e-10
+        
+        expected_result:
+          success: true
+          scientific_validation:
+            raw_result:
+              - "Debe contener campo 'hits'"
+              - "Cada hit debe tener 'identity', 'evalue', 'organism'"
+              - "E-values deben ser números <= threshold"
+              - "Identity scores entre 0-100"
+            
+            scientific_summary:
+              - "total_hits >= 0"
+              - "best_identity es número válido"
+              - "average_identity coherente con hits individuales"
+              - "significance interpretation apropiada"
+              - "evolutionary_inference basada en identidad"
+              - "functional_prediction_confidence coherente"
+            
+            taxonomic_analysis:
+              - "unique_organisms count lógico"
+              - "most_common organism válido si hay hits"
+              - "distribution contiene organismos reales"
+
+      - case_id: "BSC_002"
+        name: "BLAST Scientific Analysis Logic"
+        description: "Análisis científico debe seguir reglas biológicas estándar"
+        
+        analysis_rules:
+          identity_interpretation:
+            - ">90% identity => 'High sequence conservation'"
+            - "70-90% identity => 'Moderate sequence conservation'"
+            - "40-70% identity => 'Distant homology detected'"
+            - "<40% identity => 'Weak or no homology'"
+          
+          confidence_mapping:
+            - "avg_identity >90% => confidence 'High'"
+            - "avg_identity 70-90% => confidence 'Medium-High'"
+            - "avg_identity 40-70% => confidence 'Medium'"
+            - "avg_identity <40% => confidence 'Low'"
+          
+          evolutionary_inference:
+            - "High conservation => 'Likely orthologs'"
+            - "Moderate conservation => 'Probable functional homologs'"
+            - "Distant homology => 'Possible functional relationship'"
+            - "Weak homology => 'Uncertain functional relationship'"
+
+# ============================================================================
+# SCENARIO 2: INTEGRIDAD DE ANOTACIONES UNIPROT
+# ============================================================================
+  - name: "uniprot_annotations_integrity"
+    description: "Anotaciones UniProt deben mantener integridad y coherencia científica"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "UAI_001"
+        name: "UniProt Annotation Quality Assessment"
+        description: "Sistema debe evaluar calidad de anotaciones apropiadamente"
+        
+        request:
+          endpoint: "/api/agentic/tools/invoke"
+          method: "POST"
+          payload:
+            tool_name: "uniprot_annotations"
+            parameters:
+              protein_ids: ["P04637", "P53_HUMAN", "Q9Y6R7"]
+              fields: ["function", "pathway", "domain", "subcellular_location"]
+        
+        expected_result:
+          success: true
+          scientific_validation:
+            annotation_quality_rules:
+              - "annotation_quality 'High' si >5 anotaciones"
+              - "annotation_quality 'Medium' si 2-5 anotaciones"
+              - "annotation_quality 'Low' si <2 anotaciones"
+            
+            functional_consistency:
+              - "function_consistency 'High' si ≤2 funciones únicas"
+              - "function_consistency 'Medium' si 3-5 funciones únicas"
+              - "function_consistency 'Low' si >5 funciones únicas"
+            
+            confidence_assessment:
+              - "functional_confidence 'High' si functions AND pathways"
+              - "functional_confidence 'Medium' si solo functions"
+              - "functional_confidence 'Low' si sin functions"
+
+      - case_id: "UAI_002"
+        name: "UniProt Data Enrichment Validation"
+        description: "Enriquecimiento de datos debe añadir valor científico"
+        
+        enrichment_validation:
+          required_fields:
+            - "raw_result preservado íntegramente"
+            - "scientific_analysis generado"
+            - "parameters_used documentado"
+          
+          analysis_completeness:
+            - "dominant_functions lista las funciones principales"
+            - "associated_pathways incluye pathways relevantes"
+            - "data_completeness assessment apropiado"
+
+# ============================================================================
+# SCENARIO 3: CARACTERÍSTICAS COMPUTACIONALES DE SECUENCIAS
+# ============================================================================
+  - name: "sequence_features_computational_accuracy"
+    description: "Características computacionales deben ser precisas y científicamente interpretables"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "SFC_001"
+        name: "Basic Sequence Features Accuracy"
+        description: "Características básicas deben calcularse correctamente"
+        
+        test_sequences:
+          - sequence: "MKFLVNVALVFMVVYISYIYA"  # 20 residuos conocidos
+            expected_features:
+              length: 20
+              composition: "20 aminoácidos únicos"
+              complexity: "> 0.8"  # Alta diversidad
+          
+          - sequence: "AAAAAAAAAA"  # 10 alaninas
+            expected_features:
+              length: 10
+              composition: "{'A': 1.0}"
+              complexity: "< 0.2"  # Baja complejidad
+        
+        validation_rules:
+          - "length == len(sequence)"
+          - "composition sum == 1.0"
+          - "complexity entre 0.0 y 1.0"
+
+      - case_id: "SFC_002"
+        name: "Scientific Interpretation Logic"
+        description: "Interpretaciones científicas deben ser biológicamente coherentes"
+        
+        interpretation_rules:
+          length_significance:
+            - "<50 residuos => 'Short peptide'"
+            - "50-200 residuos => 'Small protein'"
+            - "200-500 residuos => 'Medium protein'"
+            - ">500 residuos => 'Large protein'"
+          
+          complexity_significance:
+            - "<0.1 => 'Very low complexity'"
+            - "0.1-0.3 => 'Low complexity'"
+            - ">0.3 => 'Normal complexity'"
+          
+          charge_significance:
+            - "|net_charge| >10 => 'Highly charged'"
+            - "|net_charge| 5-10 => 'Moderately charged'"
+            - "|net_charge| <5 => 'Neutral charge'"
+
+      - case_id: "SFC_003"
+        name: "Advanced Features Calculation"
+        description: "Características avanzadas (comprehensive mode) deben ser científicamente válidas"
+        
+        request:
+          endpoint: "/api/agentic/tools/invoke"
+          method: "POST"
+          payload:
+            tool_name: "sequence_features"
+            parameters:
+              sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+              analysis_type: "comprehensive"
+        
+        expected_advanced_features:
+          - "molecular_weight > 0"
+          - "isoelectric_point entre 3.0 y 12.0"
+          - "hydrophobicity profile con valores reales"
+          - "secondary_structure_propensity con helix/sheet/turn"
+          - "predicted_dominant entre ['helix', 'sheet', 'turn']"
+
+# ============================================================================
+# SCENARIO 4: ANÁLISIS LLM Y INTEGRACIÓN DE DATOS
+# ============================================================================
+  - name: "llm_analysis_integration_coherence"
+    description: "Análisis LLM debe integrar coherentemente múltiples fuentes de datos"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "LAI_001"
+        name: "Multi-Source Data Integration"
+        description: "LLM debe analizar coherentemente datos de múltiples herramientas"
+        
+        request:
+          endpoint: "/api/agentic/tools/invoke"
+          method: "POST"
+          payload:
+            tool_name: "llm_analysis"
+            parameters:
+              data:
+                sequence_info: 
+                  sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+                  length: 65
+                blast_results:
+                  hits: [{"identity": 85, "organism": "Homo sapiens"}]
+                uniprot_annotations:
+                  functions: ["DNA binding", "transcription regulation"]
+                sequence_features:
+                  complexity: 0.8
+                  charge_properties: {"net_charge": -2}
+              analysis_type: "function_prediction"
+              max_tokens: 1500
+              temperature: 0.3
+        
+        expected_result:
+          success: true
+          confidence_assessment_validation:
+            - "data_quantity assessment basado en input size"
+            - "data_sources count correcto (3/3 en este caso)"
+            - "overall_confidence coherente con cantidad/calidad datos"
+            - "confidence factors lógicamente consistentes"
+
+      - case_id: "LAI_002"
+        name: "Analysis Type Specific Prompts"
+        description: "Diferentes tipos de análisis deben generar prompts apropiados"
+        
+        analysis_types:
+          - type: "function_prediction"
+            should_include: ["función molecular", "confianza", "evidencia"]
+          
+          - type: "structural_analysis"
+            should_include: ["dominios estructurales", "motivos", "plegamiento"]
+          
+          - type: "evolutionary_analysis"
+            should_include: ["familia proteica", "origen evolutivo", "conservación"]
+          
+          - type: "general"
+            should_include: ["análisis comprehensivo", "integración", "significancia"]
+
+# ============================================================================
+# SCENARIO 5: COHERENCIA CROSS-TOOL
+# ============================================================================
+  - name: "cross_tool_coherence"
+    description: "Resultados entre herramientas deben ser mutuamente coherentes"
+    priority: "medium"
+    
+    test_cases:
+      - case_id: "CTC_001"
+        name: "Protein Analysis Pipeline Coherence"
+        description: "Análisis de proteína debe mostrar coherencia entre BLAST, UniProt y features"
+        
+        test_sequence:
+          1. "Ejecutar BLAST para proteína conocida"
+          2. "Ejecutar UniProt con protein IDs de BLAST"
+          3. "Ejecutar sequence_features con misma secuencia"
+          4. "Validar coherencia cross-tool"
+        
+        coherence_rules:
+          - "Si BLAST finds protein hits => UniProt debería encontrar annotations"
+          - "Si sequence_features indica 'protein' => BLAST/UniProt apropiados"
+          - "Longitud de secuencia consistente entre herramientas"
+          - "Tipo de secuencia (protein/DNA) consistente"
+
+      - case_id: "CTC_002"
+        name: "Analysis Depth Consistency"
+        description: "Profundidad de análisis debe ser consistente entre herramientas"
+        
+        depth_validation:
+          basic_analysis:
+            - "Todas herramientas proporcionan información básica"
+            - "Tiempo de ejecución optimizado"
+          
+          detailed_analysis:
+            - "Herramientas proporcionan información extendida"
+            - "Análisis adicionales cuando corresponde"
+          
+          comprehensive_analysis:
+            - "Máximo detalle disponible"
+            - "Análisis avanzados incluidos"
+
+# ============================================================================
+# EXECUTION SETTINGS
+# ============================================================================
+execution:
+  parallel_scenarios: false
+  scientific_validation_strict: true
+  data_coherence_checks: true
+  retry_on_scientific_inconsistency: 1
+  
+success_criteria:
+  scientific_accuracy_rate: ">= 95%"
+  data_integrity_rate: "100%"
+  cross_tool_coherence_rate: ">= 90%"
+
+# ============================================================================
+# REPORTING
+# ============================================================================
+reporting:
+  generate_scientific_validation_report: true
+  include_data_quality_metrics: true
+  cross_tool_analysis: true
+  export_formats: ["yaml", "json", "scientific_pdf"]
