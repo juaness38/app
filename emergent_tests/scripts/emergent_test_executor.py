@@ -31,6 +31,10 @@ class EmergentTestExecutor:
         # Crear directorios si no existen
         self.reports_dir.mkdir(exist_ok=True)
         
+        # Initialize enhanced scientific validation
+        self.scientific_validator = ScientificValidator()
+        self.error_reporter = ScientificErrorReporter()
+        
         # Configuración por defecto
         self.config = {
             "backend_url": self._get_backend_url(),
