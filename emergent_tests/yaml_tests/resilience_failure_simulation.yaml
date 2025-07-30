@@ -1,0 +1,355 @@
+# ============================================================================
+# ASTROFLORA EMERGENT TEST SUITE 3: RESILIENCIA Y SIMULACIÓN DE FALLOS
+# ============================================================================
+# Pruebas emergentes para validar resiliencia ante fallos de servicios,
+# circuit breakers, recovery mechanisms y comportamiento bajo estrés
+
+test_suite:
+  name: "Resilience & Failure Simulation Testing"
+  version: "1.0"
+  phase: "Fase 1: Coexistencia y Estabilización"
+  description: "Suite emergente para testing de resiliencia y fallos simulados"
+  
+environment:
+  backend_url: "${REACT_APP_BACKEND_URL}"
+  api_key: "antares-super-secret-key-2024"
+  timeout: 180
+
+# ============================================================================
+# SCENARIO 1: SIMULACIÓN DE FALLOS DE SERVICIOS BIOINFORMÁTICOS
+# ============================================================================
+scenarios:
+  - name: "bioinformatics_service_failures"
+    description: "Simula fallos de servicios externos y valida recovery mechanisms"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "BSF_001"
+        name: "BLAST Service Degradation"
+        description: "Simula degradación gradual del servicio BLAST"
+        
+        failure_simulation:
+          type: "gradual_degradation"
+          service: "blast_search"
+          
+          stages:
+            1. "Normal operation - verify baseline"
+            2. "Slow responses - timeout at 30s"
+            3. "Intermittent failures - 50% error rate"
+            4. "Complete failure - all requests fail"
+            5. "Recovery - gradual restoration"
+        
+        test_sequence:
+          - stage: "baseline"
+            request:
+              tool_name: "blast_search"
+              parameters:
+                sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+            expected: "success with normal response time"
+          
+          - stage: "timeout_simulation"
+            request:
+              tool_name: "blast_search"
+              parameters:
+                sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+                simulate_timeout: true
+            expected: "circuit breaker activation after threshold"
+          
+          - stage: "recovery_validation"
+            request:
+              tool_name: "blast_search"
+              parameters:
+                sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+            expected: "gradual recovery, success rate improvement"
+
+      - case_id: "BSF_002"
+        name: "UniProt Service Circuit Breaker"
+        description: "Valida comportamiento de circuit breaker para UniProt"
+        
+        circuit_breaker_test:
+          service: "uniprot_annotations"
+          failure_threshold: 5
+          recovery_timeout: 30
+          
+          test_phases:
+            1. "Generate enough failures to trip circuit breaker"
+            2. "Verify circuit breaker OPEN state"
+            3. "Wait for half-open transition"
+            4. "Test recovery behavior"
+            5. "Confirm circuit breaker CLOSED state"
+        
+        validation_criteria:
+          - "Circuit breaker opens after failure_threshold"
+          - "Subsequent requests fail fast (no external calls)"
+          - "After timeout, circuit breaker enters half-open"
+          - "Successful request closes circuit breaker"
+          - "Gateway metrics reflect circuit breaker state"
+
+# ============================================================================
+# SCENARIO 2: COMPORTAMIENTO CON SECUENCIAS INVÁLIDAS
+# ============================================================================
+  - name: "invalid_sequence_handling"
+    description: "Valida manejo robusto de secuencias malformadas o inválidas"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "ISH_001"
+        name: "Malformed Sequence Input"
+        description: "Diferentes tipos de secuencias inválidas deben manejarse gracefully"
+        
+        invalid_sequences:
+          - sequence: ""
+            type: "empty_string"
+            expected_error: "sequence requerido o muy corto"
+          
+          - sequence: "X"
+            type: "too_short"
+            expected_error: "secuencia demasiado corta"
+          
+          - sequence: "ATCG123XYZ"
+            type: "invalid_characters"
+            expected_error: "caracteres inválidos en secuencia"
+          
+          - sequence: null
+            type: "null_value"
+            expected_error: "parámetro requerido"
+          
+          - sequence: "A" * 10000
+            type: "extremely_long"
+            expected_behavior: "truncation or appropriate handling"
+        
+        tool_tests:
+          - tool: "blast_search"
+            validation: "Should handle all invalid sequences gracefully"
+          - tool: "sequence_features"
+            validation: "Should compute what's possible or fail gracefully"
+          - tool: "uniprot_annotations"
+            validation: "Should validate protein_ids format"
+
+      - case_id: "ISH_002"
+        name: "Edge Case Sequence Characteristics"
+        description: "Secuencias con características extremas"
+        
+        edge_cases:
+          - sequence: "AAAAAAAAAAAAAAAAAAAAAA"  # Repetitive
+            characteristic: "low_complexity"
+            expected_behavior: "appropriate complexity analysis"
+          
+          - sequence: "RKRKRKRKRKRKRKRKRKRKRK"  # Highly charged
+            characteristic: "extreme_charge"
+            expected_behavior: "charge analysis within bounds"
+          
+          - sequence: "GWGWGWGWGWGWGWGWGWGWGW"  # Alternating pattern
+            characteristic: "alternating_pattern"
+            expected_behavior: "pattern recognition in analysis"
+
+# ============================================================================
+# SCENARIO 3: CONCURRENCIA Y CARGA
+# ============================================================================
+  - name: "concurrent_load_testing"
+    description: "Valida comportamiento bajo carga concurrente y estrés"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "CLT_001"
+        name: "Concurrent Tool Invocations"
+        description: "Múltiples invocaciones simultáneas no deben causar race conditions"
+        
+        load_test:
+          concurrent_users: 20
+          requests_per_user: 5
+          total_requests: 100
+          max_duration: 120  # seconds
+          
+          request_distribution:
+            - tool: "sequence_features"
+              percentage: 40
+              reason: "Computacionalmente ligero"
+            - tool: "blast_search"
+              percentage: 30
+              reason: "Computacionalmente pesado"
+            - tool: "uniprot_annotations"
+              percentage: 20
+              reason: "Dependiente de red"
+            - tool: "llm_analysis"
+              percentage: 10
+              reason: "Más demandante"
+        
+        validation_criteria:
+          - "0 race conditions o datos corruptos"
+          - "Métricas del gateway precisas"
+          - "Success rate >= 85% bajo carga"
+          - "No memory leaks o resource exhaustion"
+          - "Response times dentro de rangos aceptables"
+
+      - case_id: "CLT_002"
+        name: "Capacity Management Under Load"
+        description: "Sistema de gestión de capacidad debe funcionar bajo estrés"
+        
+        capacity_test:
+          phase_1: "Gradual load increase hasta límite"
+          phase_2: "Sustained load at capacity"
+          phase_3: "Load spike above capacity"
+          phase_4: "Graceful degradation"
+          
+          monitoring_points:
+            - "/api/health/capacity"
+            - "/api/agentic/metrics/gateway"
+            - "/api/health/queue"
+        
+        expected_behavior:
+          - "Rate limiting activado apropiadamente"
+          - "Queue management efectivo"
+          - "Graceful degradation sin crashes"
+          - "Recovery después de spike"
+
+# ============================================================================
+# SCENARIO 4: FALLBACK MECHANISMS
+# ============================================================================
+  - name: "fallback_mechanisms"
+    description: "Valida mecanismos de fallback cuando servicios principales fallan"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "FM_001"
+        name: "Service Unavailability Fallbacks"
+        description: "Cuando un servicio no está disponible, sistema debe proveer alternativas"
+        
+        fallback_scenarios:
+          - primary_service: "blast_search"
+            failure_type: "complete_unavailability"
+            expected_fallback: "cached results or degraded mode"
+          
+          - primary_service: "uniprot_annotations"
+            failure_type: "api_rate_limit"
+            expected_fallback: "local annotations or skip step"
+          
+          - primary_service: "llm_analysis"
+            failure_type: "token_limit_exceeded"
+            expected_fallback: "rule-based analysis or simplified output"
+        
+        validation:
+          - "Sistema continúa operando sin crash"
+          - "User recibe respuesta explicativa"
+          - "Logs documentan fallback activation"
+          - "Métricas reflejan fallback usage"
+
+      - case_id: "FM_002"
+        name: "Partial Analysis Completion"
+        description: "Análisis debe completarse parcialmente si algunos componentes fallan"
+        
+        partial_completion_test:
+          scenario: "BLAST succeeds, UniProt fails, Features succeed"
+          expected_result:
+            - "BLAST results included"
+            - "UniProt section marked as unavailable"
+            - "Sequence features included"
+            - "LLM analysis adapts to available data"
+            - "Overall result marked as 'partial success'"
+
+# ============================================================================
+# SCENARIO 5: LOGGING Y TRAZABILIDAD BAJO FALLOS
+# ============================================================================
+  - name: "failure_logging_traceability"
+    description: "Logs deben mantener trazabilidad completa incluso durante fallos"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "FLT_001"
+        name: "Error Logging Completeness"
+        description: "Todos los fallos deben estar apropiadamente documentados"
+        
+        error_scenarios:
+          - error_type: "tool_invocation_failure"
+            required_log_fields:
+              - "timestamp"
+              - "tool_name"
+              - "parameters_used"
+              - "error_message"
+              - "stack_trace (if internal error)"
+              - "context_id"
+          
+          - error_type: "circuit_breaker_activation"
+            required_log_fields:
+              - "service_name"
+              - "failure_count"
+              - "threshold_exceeded"
+              - "circuit_state_change"
+          
+          - error_type: "capacity_limit_reached"
+            required_log_fields:
+              - "current_capacity"
+              - "max_capacity"
+              - "rejected_request_details"
+
+      - case_id: "FLT_002"
+        name: "End-to-End Traceability During Failures"
+        description: "Request tracing debe mantenerse incluso con fallos parciales"
+        
+        traceability_test:
+          1. "Iniciar análisis con context_id único"
+          2. "Inducir fallo en herramienta intermedia"
+          3. "Verificar logs muestran progression completa"
+          4. "Confirmar context_id preservado en todos logs"
+          5. "Validar audit trail completo disponible"
+
+# ============================================================================
+# SCENARIO 6: RECOVERY Y SELF-HEALING
+# ============================================================================
+  - name: "recovery_self_healing"
+    description: "Capacidades de auto-recuperación del sistema"
+    priority: "medium"
+    
+    test_cases:
+      - case_id: "RSH_001"
+        name: "Automatic Service Recovery"
+        description: "Sistema debe auto-recuperarse de fallos temporales"
+        
+        recovery_test:
+          1. "Inducir fallo temporal en servicio"
+          2. "Verificar detección automática de fallo"
+          3. "Observar intentos de recovery"
+          4. "Confirmar restauración automática"
+          5. "Validar métricas post-recovery"
+        
+        recovery_criteria:
+          - "Detection time < 30 seconds"
+          - "Recovery attempts within exponential backoff"
+          - "Successful recovery without manual intervention"
+          - "Metrics reset appropriately"
+
+      - case_id: "RSH_002"
+        name: "Resource Cleanup After Failures"
+        description: "Recursos deben limpiarse apropiadamente después de fallos"
+        
+        cleanup_validation:
+          - "Memory leaks prevention"
+          - "Connection pools cleanup"
+          - "Temporary files removal"
+          - "Cache invalidation when appropriate"
+          - "Metrics state consistency"
+
+# ============================================================================
+# EXECUTION SETTINGS
+# ============================================================================
+execution:
+  parallel_scenarios: false  # Sequential for proper failure simulation
+  failure_simulation_safe: true
+  recovery_testing_enabled: true
+  load_testing_gradual: true
+  
+success_criteria:
+  resilience_score: ">= 90%"
+  recovery_success_rate: ">= 95%"
+  no_data_corruption: "100%"
+  graceful_degradation: "100%"
+
+# ============================================================================
+# REPORTING
+# ============================================================================
+reporting:
+  generate_resilience_report: true
+  include_failure_analysis: true
+  recovery_metrics: true
+  load_testing_results: true
+  export_formats: ["yaml", "json", "resilience_pdf"]

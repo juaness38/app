@@ -1,0 +1,470 @@
+# ============================================================================
+# ASTROFLORA EMERGENT TEST SUITE 4: ENDPOINTS BAJO ESTRÉS Y EDGE CASES
+# ============================================================================
+# Pruebas emergentes para endpoints críticos bajo diferentes escenarios,
+# edge cases, validación de parámetros y comportamiento bajo estrés
+
+test_suite:
+  name: "Critical Endpoints Stress & Edge Cases Testing"
+  version: "1.0"
+  phase: "Fase 1: Coexistencia y Estabilización"
+  description: "Suite emergente para testing exhaustivo de endpoints críticos"
+  
+environment:
+  backend_url: "${REACT_APP_BACKEND_URL}"
+  api_key: "antares-super-secret-key-2024"
+  timeout: 300
+
+# ============================================================================
+# SCENARIO 1: /api/analysis/ - ANÁLISIS CORE ENDPOINTS
+# ============================================================================
+scenarios:
+  - name: "analysis_endpoints_comprehensive"
+    description: "Testing exhaustivo de todos los endpoints de análisis bajo estrés"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "AEC_001"
+        name: "Analysis Creation Edge Cases"
+        description: "POST /api/analysis/start con casos extremos y validaciones"
+        
+        edge_cases:
+          - case: "minimum_valid_request"
+            payload:
+              workspace_id: "min_test"
+              protocol_type: "PROTEIN_FUNCTION_ANALYSIS"
+              sequence_data:
+                sequence: "MKFLVNVALVFMVVYISYIYA"  # 20 residuos mínimos
+            expected: "success with basic analysis"
+          
+          - case: "maximum_sequence_length"
+            payload:
+              workspace_id: "max_test"
+              protocol_type: "COMPREHENSIVE_PROTEIN_ANALYSIS"
+              sequence_data:
+                sequence: ${"A" * 5000}  # Secuencia muy larga
+              parameters:
+                analysis_depth: "comprehensive"
+                max_target_seqs: 1000
+            expected: "success or appropriate truncation/chunking"
+          
+          - case: "invalid_protocol_type"
+            payload:
+              workspace_id: "invalid_test"
+              protocol_type: "NONEXISTENT_PROTOCOL"
+              sequence_data:
+                sequence: "MKFLVNVALVFMVVYISYIYA"
+            expected: "400 Bad Request with clear error message"
+          
+          - case: "malformed_parameters"
+            payload:
+              workspace_id: "malformed_test"
+              protocol_type: "PROTEIN_FUNCTION_ANALYSIS"
+              sequence_data:
+                sequence: "MKFLVNVALVFMVVYISYIYA"
+              parameters:
+                analysis_depth: "invalid_depth"
+                max_target_seqs: -1
+                evalue_threshold: "not_a_number"
+            expected: "400 Bad Request with parameter validation errors"
+
+      - case_id: "AEC_002"
+        name: "Analysis Status Polling Under Load"
+        description: "GET /api/analysis/{context_id} bajo polling intensivo"
+        
+        load_test:
+          setup: "Create analysis with known context_id"
+          concurrent_polling: 50
+          polling_frequency: "every 100ms"
+          duration: "60 seconds"
+          
+          validation:
+            - "Consistent status responses"
+            - "No race conditions in status updates"
+            - "Response times < 200ms under load"
+            - "No database locks or conflicts"
+            - "Memory usage stable"
+
+      - case_id: "AEC_003"
+        name: "Batch Analysis Stress Test"
+        description: "POST /api/analysis/batch con cargas extremas"
+        
+        batch_scenarios:
+          - size: 1
+            description: "Single analysis batch"
+            expected: "normal processing"
+          
+          - size: 10
+            description: "Standard batch size"
+            expected: "efficient processing"
+          
+          - size: 50
+            description: "Large batch"
+            expected: "queuing and capacity management"
+          
+          - size: 100
+            description: "Maximum batch size"
+            expected: "rate limiting or rejection with clear message"
+        
+        validation_per_batch:
+          - "All analyses have unique context_ids"
+          - "Proper queuing and priority handling"
+          - "No batch analyses lost or duplicated"
+          - "Appropriate error handling for oversized batches"
+
+# ============================================================================
+# SCENARIO 2: /api/health/ - HEALTH ENDPOINTS UNDER STRESS
+# ============================================================================
+  - name: "health_endpoints_stress"
+    description: "Health endpoints deben mantener performance bajo carga extrema"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "HES_001"
+        name: "Basic Health Check Performance"
+        description: "GET /api/health/ debe responder rápidamente incluso bajo estrés del sistema"
+        
+        stress_conditions:
+          - condition: "high_cpu_load"
+            simulation: "CPU intensive background tasks"
+            max_response_time: "500ms"
+          
+          - condition: "high_memory_usage"
+            simulation: "Memory pressure simulation"
+            max_response_time: "500ms"
+          
+          - condition: "database_load"
+            simulation: "High database query load"
+            max_response_time: "1000ms"
+        
+        validation:
+          - "Health check never fails due to system load"
+          - "Response includes accurate component status"
+          - "Timeouts handled gracefully"
+
+      - case_id: "HES_002"
+        name: "Detailed Health Check Accuracy"
+        description: "GET /api/health/detailed debe proporcionar información precisa"
+        
+        accuracy_validation:
+          health_components:
+            - component: "container"
+              validation: "reflects actual container state"
+            - component: "services"
+              validation: "accurate service health status"
+            - component: "orchestrator"
+              validation: "real orchestrator functionality"
+            - component: "tool_gateway"
+              validation: "gateway operational status"
+            - component: "atomic_tools"
+              validation: "individual tool health accuracy"
+        
+        cross_validation:
+          - "Basic health vs detailed health consistency"
+          - "Component health vs actual functionality"
+          - "Metrics endpoint vs health endpoint consistency"
+
+      - case_id: "HES_003"
+        name: "Metrics Endpoint Performance"
+        description: "GET /api/health/metrics (Prometheus) bajo alta frecuencia de scraping"
+        
+        metrics_load_test:
+          scraping_frequency: "every 5 seconds"
+          concurrent_scrapers: 10
+          duration: "300 seconds"  # 5 minutes
+          
+          validation:
+            - "Consistent metrics format"
+            - "No missing or corrupted metrics"
+            - "Reasonable response times"
+            - "No memory leaks from metrics collection"
+
+# ============================================================================
+# SCENARIO 3: /api/agentic/ - AGENTIC ENDPOINTS COMPREHENSIVE
+# ============================================================================
+  - name: "agentic_endpoints_comprehensive"
+    description: "Testing exhaustivo de todos los 15+ endpoints agénticos"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "AGC_001"
+        name: "Tools Endpoints Edge Cases"
+        description: "Validación completa de todos los endpoints de herramientas"
+        
+        endpoint_tests:
+          - endpoint: "/api/agentic/tools/available"
+            method: "GET"
+            edge_cases:
+              - "Normal operation"
+              - "When some tools are unhealthy"
+              - "During system maintenance"
+            validation: "Always returns structured response"
+          
+          - endpoint: "/api/agentic/tools/schemas/all"
+            method: "GET"
+            edge_cases:
+              - "All tools operational"
+              - "Some tools failing"
+              - "High concurrent access"
+            validation: "Complete schemas for all available tools"
+          
+          - endpoint: "/api/agentic/tools/invoke"
+            method: "POST"
+            edge_cases:
+              - "Valid parameters"
+              - "Missing required parameters"
+              - "Invalid parameter types"
+              - "Extremely large payloads"
+              - "Concurrent invocations of same tool"
+            validation: "Appropriate responses for all cases"
+
+      - case_id: "AGC_002"
+        name: "Tool Recommendation Sophistication"
+        description: "POST /api/agentic/tools/recommend con contextos complejos"
+        
+        complex_contexts:
+          - context_name: "multi_species_comparative"
+            context_data:
+              sequence_info: {type: "protein", length: 300}
+              analysis_goal: "comparative_genomics"
+              species_list: ["human", "mouse", "zebrafish"]
+              existing_data: ["phylogenetic_tree"]
+            expected_sophistication: "Context-aware recommendations"
+          
+          - context_name: "drug_target_analysis"
+            context_data:
+              sequence_info: {type: "protein", length: 450}
+              analysis_goal: "drug_target_identification"
+              disease_context: "cancer"
+              structural_requirements: "binding_site_analysis"
+            expected_sophistication: "Domain-specific tool prioritization"
+          
+          - context_name: "evolutionary_conservation"
+            context_data:
+              sequence_info: {type: "protein", length: 200}
+              analysis_goal: "conservation_analysis"
+              taxonomic_scope: "vertebrates"
+              time_constraint: "urgent"
+            expected_sophistication: "Balanced accuracy vs speed recommendations"
+
+      - case_id: "AGC_003"
+        name: "Templates and Configuration Validation"
+        description: "Endpoints de templates y configuración bajo escenarios complejos"
+        
+        template_tests:
+          - endpoint: "/api/agentic/templates/available"
+            validation: "All templates have complete metadata"
+          
+          - endpoint: "/api/agentic/templates/{template_id}"
+            test_cases:
+              - "Valid template IDs"
+              - "Nonexistent template IDs"
+              - "Template ID with special characters"
+          
+          - endpoint: "/api/agentic/config/validate"
+            complex_configs:
+              - config_name: "high_performance"
+                config:
+                  max_target_seqs: 1000
+                  max_concurrent_sequences: 20
+                  llm_max_tokens: 4000
+                  analysis_depth: "comprehensive"
+                validation: "Performance impact assessment"
+              
+              - config_name: "resource_constrained"
+                config:
+                  max_target_seqs: 10
+                  max_concurrent_sequences: 1
+                  llm_max_tokens: 500
+                  enable_caching: true
+                validation: "Optimization recommendations"
+
+# ============================================================================
+# SCENARIO 4: PARÁMETROS EXTREMOS Y EDGE CASES
+# ============================================================================
+  - name: "extreme_parameters_validation"
+    description: "Validación de comportamiento con parámetros en valores límite"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "EPV_001"
+        name: "Numeric Parameter Boundaries"
+        description: "Parámetros numéricos en valores mínimos, máximos y fuera de rango"
+        
+        boundary_tests:
+          - parameter: "evalue_threshold"
+            values:
+              - value: 0
+                expected: "Should handle zero appropriately"
+              - value: 1e-100
+                expected: "Very small scientific notation"
+              - value: 1
+                expected: "Maximum practical e-value"
+              - value: -1
+                expected: "Invalid negative value error"
+          
+          - parameter: "max_target_seqs"
+            values:
+              - value: 1
+                expected: "Minimum valid value"
+              - value: 10000
+                expected: "Very large value handling"
+              - value: 0
+                expected: "Invalid zero value error"
+              - value: -5
+                expected: "Negative value error"
+          
+          - parameter: "llm_temperature"
+            values:
+              - value: 0.0
+                expected: "Deterministic output"
+              - value: 1.0
+                expected: "Maximum creativity"
+              - value: 2.0
+                expected: "Out of range error"
+              - value: -0.1
+                expected: "Negative value error"
+
+      - case_id: "EPV_002"
+        name: "String Parameter Edge Cases"
+        description: "Parámetros de string con valores extremos o malformados"
+        
+        string_tests:
+          - parameter: "blast_database"
+            values:
+              - value: "nr"
+                expected: "Standard database"
+              - value: "nonexistent_db"
+                expected: "Database not found error"
+              - value: ""
+                expected: "Empty string error"
+              - value: "a" * 1000
+                expected: "Very long string handling"
+          
+          - parameter: "workspace_id"
+            values:
+              - value: "test_workspace"
+                expected: "Valid workspace"
+              - value: "special-chars!@#$%"
+                expected: "Special character handling"
+              - value: ""
+                expected: "Empty workspace ID error"
+              - value: null
+                expected: "Null value error"
+
+# ============================================================================
+# SCENARIO 5: CONCURRENCIA Y RATE LIMITING
+# ============================================================================
+  - name: "concurrency_rate_limiting"
+    description: "Comportamiento de endpoints bajo alta concurrencia y rate limiting"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "CRL_001"
+        name: "Rate Limiting Effectiveness"
+        description: "Sistema debe aplicar rate limiting apropiadamente"
+        
+        rate_limit_tests:
+          - endpoint: "/api/analysis/start"
+            limit: "10 requests per minute per IP"
+            test_pattern:
+              - "Send 5 requests rapidly" -> "All should succeed"
+              - "Send 10 requests rapidly" -> "Should hit rate limit"
+              - "Send 15 requests rapidly" -> "5 should be rejected with 429"
+              - "Wait 1 minute" -> "Rate limit should reset"
+          
+          validation:
+            - "Rate limit headers present in responses"
+            - "429 status code for exceeded limits"
+            - "Clear error messages about rate limiting"
+            - "Proper reset mechanism"
+
+      - case_id: "CRL_002"
+        name: "Concurrent Analysis Processing"
+        description: "Múltiples análisis concurrentes deben procesarse correctamente"
+        
+        concurrency_test:
+          concurrent_analyses: 25
+          analysis_types: ["PROTEIN_FUNCTION_ANALYSIS", "SEQUENCE_ALIGNMENT", "STRUCTURE_PREDICTION"]
+          sequence_variants: 5  # Different sequences to avoid caching effects
+          
+          validation:
+            - "All analyses get unique context_ids"
+            - "No cross-contamination of results"
+            - "Proper queue management"
+            - "Resource allocation fairness"
+            - "Consistent processing times"
+
+# ============================================================================
+# SCENARIO 6: AUTHENTICATION Y AUTHORIZATION STRESS
+# ============================================================================
+  - name: "auth_stress_testing"
+    description: "Sistema de autenticación bajo estrés y ataques simulados"
+    priority: "medium"
+    
+    test_cases:
+      - case_id: "AST_001"
+        name: "Authentication Edge Cases"
+        description: "Casos extremos de autenticación y validación de API keys"
+        
+        auth_scenarios:
+          - scenario: "no_api_key"
+            headers: {}
+            expected: "401 Unauthorized"
+          
+          - scenario: "invalid_api_key"
+            headers: {"X-API-Key": "invalid-key-12345"}
+            expected: "401 Unauthorized"
+          
+          - scenario: "malformed_api_key"
+            headers: {"X-API-Key": ""}
+            expected: "401 Unauthorized"
+          
+          - scenario: "sql_injection_attempt"
+            headers: {"X-API-Key": "'; DROP TABLE users; --"}
+            expected: "401 Unauthorized (safe handling)"
+          
+          - scenario: "very_long_key"
+            headers: {"X-API-Key": "x" * 10000}
+            expected: "401 Unauthorized (length handling)"
+
+      - case_id: "AST_002"
+        name: "Brute Force Protection"
+        description: "Sistema debe resistir ataques de fuerza bruta"
+        
+        brute_force_test:
+          attempts: 100
+          invalid_keys: ["key1", "key2", "key3", "wrong", "fake"]
+          time_window: "60 seconds"
+          
+          expected_behavior:
+            - "Rate limiting after multiple failures"
+            - "Exponential backoff implementation"
+            - "No information leakage about valid keys"
+            - "Proper logging of attack attempts"
+
+# ============================================================================
+# EXECUTION SETTINGS
+# ============================================================================
+execution:
+  parallel_scenarios: true  # Can run endpoint tests in parallel
+  stress_testing_gradual: true
+  load_ramp_up_time: 30  # seconds
+  monitoring_intensive: true
+  
+success_criteria:
+  endpoint_availability: ">= 99%"
+  response_time_p95: "<= 2000ms"
+  error_rate: "<= 1%"
+  rate_limiting_accuracy: "100%"
+  no_resource_leaks: "100%"
+
+# ============================================================================
+# REPORTING
+# ============================================================================
+reporting:
+  generate_performance_report: true
+  include_response_time_analysis: true
+  rate_limiting_effectiveness: true
+  concurrency_analysis: true
+  export_formats: ["yaml", "json", "performance_pdf"]
