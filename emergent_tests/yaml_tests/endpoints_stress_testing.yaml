@@ -368,10 +368,14 @@ scenarios:
           - endpoint: "/api/analysis/start"
             limit: "10 requests per minute per IP"
             test_pattern:
-              - "Send 5 requests rapidly" -> "All should succeed"
-              - "Send 10 requests rapidly" -> "Should hit rate limit"
-              - "Send 15 requests rapidly" -> "5 should be rejected with 429"
-              - "Wait 1 minute" -> "Rate limit should reset"
+              - action: "Send 5 requests rapidly"
+                expected: "All should succeed"
+              - action: "Send 10 requests rapidly" 
+                expected: "Should hit rate limit"
+              - action: "Send 15 requests rapidly"
+                expected: "5 should be rejected with 429"  
+              - action: "Wait 1 minute"
+                expected: "Rate limit should reset"
           
           validation:
             - "Rate limit headers present in responses"
