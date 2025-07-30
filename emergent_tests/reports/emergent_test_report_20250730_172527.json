@@ -1,0 +1,321 @@
+{
+  "execution_id": "56da9688",
+  "start_time": "2025-07-30T17:25:26.865557",
+  "config": {
+    "backend_url": "https://251afff3-56b4-4fc5-a73c-120737cf01e1.preview.emergentagent.com",
+    "api_key": "antares-super-secret-key-2024",
+    "timeout": 300,
+    "parallel_execution": false,
+    "verbose": true
+  },
+  "suites": [
+    {
+      "suite_file": "agentic_orchestration_resilience.yaml",
+      "suite_info": {
+        "name": "Agentic Orchestration & Resilience Testing",
+        "version": "1.0",
+        "phase": "Fase 1: Coexistencia y Estabilización",
+        "description": "Suite emergente para testing de lógica agéntica avanzada"
+      },
+      "execution_id": "56da9688",
+      "start_time": "2025-07-30T17:25:26.881243",
+      "scenarios": [
+        {
+          "name": "intelligent_tool_recommendation",
+          "description": "Valida que el sistema recomiende herramientas apropiadas según contexto científico",
+          "priority": "critical",
+          "start_time": "2025-07-30T17:25:26.881266",
+          "test_cases": [
+            {
+              "case_id": "ITR_001",
+              "name": "Protein Function Discovery Context",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:26.881275",
+              "execution_time_ms": 143,
+              "details": {
+                "http_status": 200,
+                "response_headers": {
+                  "content-length": "856",
+                  "content-type": "application/json",
+                  "date": "Wed, 30 Jul 2025 17:25:26 GMT",
+                  "server": "uvicorn",
+                  "x-request-id": "777054ff-89b3-4dc6-9db3-a3cd72ac745e",
+                  "via": "1.1 google",
+                  "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+                },
+                "response_data": {
+                  "success": true,
+                  "data": {
+                    "recommendations": [
+                      {
+                        "tool_name": "blast_search",
+                        "applicability_score": 1.0,
+                        "description": "Búsqueda de homología usando BLAST",
+                        "scientific_purpose": "Identifica secuencias similares en bases de datos para inferir función y relaciones evolutivas",
+                        "priority": "high"
+                      },
+                      {
+                        "tool_name": "sequence_features",
+                        "applicability_score": 1.0,
+                        "description": "Calcula características computacionales de secuencias",
+                        "scientific_purpose": "Extrae características fisicoquímicas y estructurales de secuencias biológicas",
+                        "priority": "high"
+                      }
+                    ],
+                    "total_recommendations": 2,
+                    "context_analyzed": {
+                      "sequence_info": {
+                        "type": "protein",
+                        "length": 350,
+                        "source": "novel_organism"
+                      },
+                      "analysis_goal": "function_prediction",
+                      "priority": "high",
+                      "research_context": "evolutionary_biology"
+                    },
+                    "min_score_used": 0.6
+                  },
+                  "error": null,
+                  "timestamp": "2025-07-30T17:25:27.020675",
+                  "request_id": null
+                }
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:27.025061"
+            },
+            {
+              "case_id": "ITR_002",
+              "name": "DNA Sequence Analysis Context",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:27.025102",
+              "execution_time_ms": 56,
+              "details": {
+                "http_status": 200,
+                "response_headers": {
+                  "content-length": "1059",
+                  "content-type": "application/json",
+                  "date": "Wed, 30 Jul 2025 17:25:26 GMT",
+                  "server": "uvicorn",
+                  "x-request-id": "46527bb7-eae0-4b87-836e-12772a0cd77d",
+                  "via": "1.1 google",
+                  "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+                },
+                "response_data": {
+                  "success": true,
+                  "data": {
+                    "recommendations": [
+                      {
+                        "tool_name": "blast_search",
+                        "applicability_score": 1.0,
+                        "description": "Búsqueda de homología usando BLAST",
+                        "scientific_purpose": "Identifica secuencias similares en bases de datos para inferir función y relaciones evolutivas",
+                        "priority": "high"
+                      },
+                      {
+                        "tool_name": "sequence_features",
+                        "applicability_score": 1.0,
+                        "description": "Calcula características computacionales de secuencias",
+                        "scientific_purpose": "Extrae características fisicoquímicas y estructurales de secuencias biológicas",
+                        "priority": "high"
+                      },
+                      {
+                        "tool_name": "llm_analysis",
+                        "applicability_score": 0.4,
+                        "description": "Análisis de datos científicos usando LLM",
+                        "scientific_purpose": "Integra y analiza datos científicos usando inteligencia artificial para generar insights",
+                        "priority": "low"
+                      }
+                    ],
+                    "total_recommendations": 3,
+                    "context_analyzed": {
+                      "sequence_info": {
+                        "type": "dna",
+                        "length": 1500,
+                        "gc_content": 0.62
+                      },
+                      "analysis_goal": "homology_search",
+                      "existing_data": [
+                        "blast_results"
+                      ]
+                    },
+                    "min_score_used": 0.4
+                  },
+                  "error": null,
+                  "timestamp": "2025-07-30T17:25:27.078447",
+                  "request_id": null
+                }
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:27.081981"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:27.082013"
+        },
+        {
+          "name": "tool_applicability_coherence",
+          "description": "Valida coherencia en assess_applicability entre diferentes contextos",
+          "priority": "critical",
+          "start_time": "2025-07-30T17:25:27.082037",
+          "test_cases": [
+            {
+              "case_id": "TAC_001",
+              "name": "Blast Applicability Logic",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:27.082045",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:27.082051"
+            },
+            {
+              "case_id": "TAC_002",
+              "name": "Cross-Tool Applicability Consistency",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:27.082060",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:27.082063"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:27.082067"
+        },
+        {
+          "name": "gateway_metrics_under_load",
+          "description": "Valida precisión de métricas del gateway bajo invocaciones concurrentes",
+          "priority": "high",
+          "start_time": "2025-07-30T17:25:27.082080",
+          "test_cases": [
+            {
+              "case_id": "GMU_001",
+              "name": "Concurrent Tool Invocations",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:27.082087",
+              "execution_time_ms": 0,
+              "details": {
+                "validation_type": "internal"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:27.082091"
+            }
+          ],
+          "summary": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:27.082097"
+        },
+        {
+          "name": "tool_failure_resilience",
+          "description": "Sistema debe manejar gracefully fallos de herramientas individuales",
+          "priority": "critical",
+          "start_time": "2025-07-30T17:25:27.082110",
+          "test_cases": [
+            {
+              "case_id": "TFR_001",
+              "name": "Invalid Tool Parameters",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:27.082117",
+              "execution_time_ms": 0,
+              "details": {
+                "validation_type": "internal"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:27.082120"
+            },
+            {
+              "case_id": "TFR_002",
+              "name": "Tool Health Degradation",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:27.082128",
+              "execution_time_ms": 0,
+              "details": {
+                "sequence_type": "multi_step"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:27.082131"
+            }
+          ],
+          "summary": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:27.082137"
+        },
+        {
+          "name": "dynamic_protocol_orchestration",
+          "description": "Valida capacidad de orquestación dinámica en Fase 1",
+          "priority": "medium",
+          "start_time": "2025-07-30T17:25:27.082157",
+          "test_cases": [
+            {
+              "case_id": "DPO_001",
+              "name": "Template to Atomic Tools Mapping",
+              "status": "passed",
+              "start_time": "2025-07-30T17:25:27.082164",
+              "execution_time_ms": 0,
+              "details": {
+                "test_type": "generic"
+              },
+              "errors": [],
+              "scientific_validation": {},
+              "end_time": "2025-07-30T17:25:27.082169"
+            }
+          ],
+          "summary": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0
+          },
+          "end_time": "2025-07-30T17:25:27.082175"
+        }
+      ],
+      "summary": {
+        "total_scenarios": 5,
+        "total_test_cases": 8,
+        "passed_test_cases": 8,
+        "failed_test_cases": 0,
+        "error_test_cases": 0,
+        "success_rate": 100.0
+      },
+      "end_time": "2025-07-30T17:25:27.082182"
+    }
+  ],
+  "overall_summary": {
+    "total_suites": 1,
+    "total_scenarios": 5,
+    "total_test_cases": 8,
+    "passed_test_cases": 8,
+    "failed_test_cases": 0,
+    "error_test_cases": 0,
+    "overall_success_rate": 100.0
+  }
+}
