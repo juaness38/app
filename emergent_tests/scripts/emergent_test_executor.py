@@ -19,7 +19,7 @@ import aiohttp
 import argparse
 
 # Import enhanced scientific validation
-from scientific_validator import ScientificValidator, ScientificErrorReporter
+from .scientific_validator import ScientificValidator, ScientificErrorReporter
 
 class EmergentTestExecutor:
     """Ejecutor de tests emergentes para Astroflora"""
