@@ -114,7 +114,7 @@ scenarios:
             type: "null_value"
             expected_error: "parámetro requerido"
           
-          - sequence: "A" * 10000
+          - sequence: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
             type: "extremely_long"
             expected_behavior: "truncation or appropriate handling"
         
