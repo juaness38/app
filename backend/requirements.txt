@@ -34,3 +34,4 @@ slowapi>=0.1.9
 cachetools>=6.0.0
 PyYAML
 biopython
+aiohttp
