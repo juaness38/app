@@ -106,19 +106,26 @@ class EmergentTestExecutor:
         start_time = time.time()
         
         try:
-            # Determinar tipo de test y ejecutar apropiadamente
-            if 'request' in test_case:
-                # Test de endpoint HTTP
-                result = await self._execute_http_test(test_case, suite_context, result)
-            elif 'validation' in test_case:
-                # Test de validación
-                result = await self._execute_validation_test(test_case, suite_context, result)
-            elif 'test_sequence' in test_case:
-                # Test de secuencia compleja
-                result = await self._execute_sequence_test(test_case, suite_context, result)
+            # Check for concurrent testing requirement
+            concurrency_level = test_case.get('concurrency', 1)
+            
+            if concurrency_level > 1:
+                # Execute concurrent test
+                result = await self._execute_concurrent_test(test_case, suite_context, result, concurrency_level)
             else:
-                # Test genérico
-                result = await self._execute_generic_test(test_case, suite_context, result)
+                # Determinar tipo de test y ejecutar apropiadamente
+                if 'request' in test_case:
+                    # Test de endpoint HTTP
+                    result = await self._execute_http_test(test_case, suite_context, result)
+                elif 'validation' in test_case:
+                    # Test de validación
+                    result = await self._execute_validation_test(test_case, suite_context, result)
+                elif 'test_sequence' in test_case:
+                    # Test de secuencia compleja
+                    result = await self._execute_sequence_test(test_case, suite_context, result)
+                else:
+                    # Test genérico
+                    result = await self._execute_generic_test(test_case, suite_context, result)
             
             result['status'] = 'passed' if not result['errors'] else 'failed'
             
