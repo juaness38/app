@@ -194,11 +194,32 @@ class EmergentTestExecutor:
         if 'criteria' in expected and response_data:
             for criterion in expected['criteria']:
                 try:
-                    # Evaluar criterio (simple string matching por ahora)
-                    if not self._evaluate_criterion(criterion, response_data):
-                        result['errors'].append(f"Criterion failed: {criterion}")
+                    # Use enhanced criterion evaluation
+                    passed, message = self._evaluate_criterion(criterion, response_data)
+                    if not passed:
+                        result['errors'].append(f"Criterion failed: {message}")
                 except Exception as e:
                     result['errors'].append(f"Criterion evaluation error: {criterion} -> {str(e)}")
+        
+        # Enhanced validation support - handle 'validation' key similar to 'criteria'
+        if 'validation' in expected and response_data:
+            for validation in expected['validation']:
+                try:
+                    # Extract actual value using JSON path if specified
+                    if 'path' in validation:
+                        path = validation['path']
+                        actual_value = self.scientific_validator._extract_json_path(response_data, path)
+                        criterion = validation.get('criterion', {})
+                        passed, message = self.scientific_validator.evaluate_criterion(criterion, actual_value)
+                    else:
+                        # Direct validation
+                        passed, message = self._evaluate_criterion(validation, response_data)
+                    
+                    if not passed:
+                        result['errors'].append(f"Validation failed: {message}")
+                        
+                except Exception as e:
+                    result['errors'].append(f"Validation error: {validation} -> {str(e)}")
         
         # Validación científica
         if 'scientific_validation' in expected:
