@@ -341,6 +341,149 @@ class EmergentTestExecutor:
         result['details']['test_type'] = 'generic'
         return result
     
+    async def _execute_concurrent_test(self, test_case: Dict[str, Any], suite_context: Dict[str, Any], result: Dict[str, Any], concurrency: int) -> Dict[str, Any]:
+        """Execute concurrent test with specified concurrency level"""
+        print(f"      🔄 Running concurrent test with {concurrency} concurrent requests")
+        
+        # Prepare the request data
+        request_data = test_case.get('request', {})
+        endpoint = request_data.get('endpoint', '/')
+        method = request_data.get('method', 'POST')
+        payload = request_data.get('payload', {})
+        headers = request_data.get('headers', {})
+        
+        # Add API key to headers
+        headers.setdefault('X-API-Key', self.config['api_key'])
+        headers.setdefault('Content-Type', 'application/json')
+        
+        # Create session for connection pooling and execute concurrent requests
+        start_time = time.time()
+        
+        async with aiohttp.ClientSession() as session:
+            # Create tasks for concurrent execution
+            tasks = []
+            for i in range(concurrency):
+                # Add unique identifier for tracking concurrent requests
+                request_payload = payload.copy() if isinstance(payload, dict) else payload
+                if isinstance(request_payload, dict):
+                    request_payload['_concurrent_id'] = i
+                
+                # Create task
+                task = self._execute_single_concurrent_request(
+                    session, endpoint, method, request_payload, headers, test_case, i
+                )
+                tasks.append(task)
+            
+            # Execute all requests concurrently
+            concurrent_results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+        end_time = time.time()
+        total_time = end_time - start_time
+        
+        # Analyze concurrent results
+        successful_requests = 0
+        failed_requests = 0
+        error_requests = 0
+        response_times = []
+        status_codes = {}
+        
+        for i, single_result in enumerate(concurrent_results):
+            if isinstance(single_result, Exception):
+                error_requests += 1
+                result['errors'].append(f"Concurrent request {i} exception: {str(single_result)}")
+            else:
+                response_times.append(single_result.get('response_time', 0))
+                status = single_result.get('status_code', 0)
+                
+                if status in status_codes:
+                    status_codes[status] += 1
+                else:
+                    status_codes[status] = 1
+                
+                if single_result.get('success', False):
+                    successful_requests += 1
+                else:
+                    failed_requests += 1
+        
+        # Calculate metrics
+        success_rate = successful_requests / concurrency if concurrency > 0 else 0
+        avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+        
+        # Store concurrent test details
+        result['details'].update({
+            'concurrency_level': concurrency,
+            'total_requests': concurrency,
+            'successful_requests': successful_requests,
+            'failed_requests': failed_requests,
+            'error_requests': error_requests,
+            'success_rate': success_rate,
+            'total_time_seconds': total_time,
+            'average_response_time_ms': avg_response_time,
+            'status_code_distribution': status_codes,
+            'concurrent_results': concurrent_results[:5]  # Store first 5 for debugging
+        })
+        
+        # Validate concurrent test expectations
+        expected = test_case.get('expected', {})
+        if 'success_rate_min' in expected:
+            min_success_rate = expected['success_rate_min']
+            if success_rate < min_success_rate:
+                result['errors'].append(f"Success rate {success_rate:.2f} below minimum {min_success_rate}")
+        
+        if 'max_response_time_ms' in expected:
+            max_response_time = expected['max_response_time_ms']
+            if avg_response_time > max_response_time:
+                result['errors'].append(f"Average response time {avg_response_time:.2f}ms exceeds maximum {max_response_time}ms")
+        
+        print(f"      📊 Concurrent test results: {successful_requests}/{concurrency} successful ({success_rate:.1%}), avg {avg_response_time:.1f}ms")
+        
+        return result
+    
+    async def _execute_single_concurrent_request(self, session: aiohttp.ClientSession, endpoint: str, method: str, 
+                                               payload: Any, headers: Dict[str, str], test_case: Dict[str, Any], 
+                                               request_id: int) -> Dict[str, Any]:
+        """Execute a single request within a concurrent test"""
+        start_time = time.time()
+        base_url = self.config['backend_url']
+        url = f"{base_url}{endpoint}"
+        
+        try:
+            # Execute the HTTP request
+            async with session.request(method, url, json=payload, headers=headers) as response:
+                status_code = response.status
+                
+                try:
+                    response_data = await response.json()
+                except:
+                    response_data = await response.text()
+                
+                response_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+                
+                # Determine success based on status code and expected criteria
+                expected_status = test_case.get('expected', {}).get('status_code', 200)
+                success = status_code == expected_status
+                
+                return {
+                    'request_id': request_id,
+                    'status_code': status_code,
+                    'response_time': response_time,
+                    'success': success,
+                    'response_data': response_data,
+                    'url': url,
+                    'payload_size': len(str(payload)) if payload else 0
+                }
+                
+        except Exception as e:
+            response_time = (time.time() - start_time) * 1000
+            return {
+                'request_id': request_id,
+                'status_code': 0,
+                'response_time': response_time,
+                'success': False,
+                'error': str(e),
+                'url': url
+            }
+    
     async def execute_scenario(self, scenario: Dict[str, Any], suite_context: Dict[str, Any]) -> Dict[str, Any]:
         """Ejecuta un escenario completo"""
         name = scenario.get('name', 'unknown_scenario')
