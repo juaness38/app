@@ -1,0 +1,393 @@
+# ============================================================================
+# ASTROFLORA EMERGENT TEST SUITE 5: LOGGING, TRAZABILIDAD Y AUDITORÍA
+# ============================================================================
+# Pruebas emergentes para validar logging científico detallado,
+# trazabilidad completa de experimentos y auditoría de operaciones
+
+test_suite:
+  name: "Logging, Traceability & Audit Testing"
+  version: "1.0"
+  phase: "Fase 1: Coexistencia y Estabilización"
+  description: "Suite emergente para validación de logging y trazabilidad científica"
+  
+environment:
+  backend_url: "${REACT_APP_BACKEND_URL}"
+  api_key: "antares-super-secret-key-2024"
+  timeout: 120
+
+# ============================================================================
+# SCENARIO 1: TRAZABILIDAD CIENTÍFICA END-TO-END
+# ============================================================================
+scenarios:
+  - name: "scientific_traceability_end_to_end"
+    description: "Validar trazabilidad completa desde request inicial hasta resultado final"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "STE_001"
+        name: "Complete Analysis Traceability"
+        description: "Un análisis completo debe generar audit trail científico completo"
+        
+        traceability_flow:
+          1. "Initiate analysis with unique identifiers"
+          2. "Track each tool invocation"
+          3. "Log scientific decisions and parameters"
+          4. "Record intermediate results"
+          5. "Document final analysis compilation"
+          6. "Generate complete audit trail"
+        
+        required_trace_elements:
+          analysis_initiation:
+            - "context_id único y persistente"
+            - "timestamp preciso de inicio"
+            - "user_id y workspace_id"
+            - "protocol_type seleccionado"
+            - "parámetros iniciales completos"
+            - "secuencia original con hash"
+          
+          tool_invocations:
+            - "tool_name y versión"
+            - "parámetros exactos utilizados"
+            - "timestamp de invocación"
+            - "execution_time medido"
+            - "success/failure status"
+            - "resultado o error detallado"
+          
+          scientific_decisions:
+            - "herramientas recomendadas vs seleccionadas"
+            - "parámetros ajustados automáticamente"
+            - "fallbacks activados"
+            - "cache hits/misses"
+          
+          result_compilation:
+            - "fuentes de datos integradas"
+            - "confidence scores aplicados"
+            - "interpretaciones científicas generadas"
+            - "limitaciones identificadas"
+
+      - case_id: "STE_002"
+        name: "Cross-Session Traceability"
+        description: "Trazabilidad debe mantenerse entre sesiones y re-análisis"
+        
+        cross_session_test:
+          session_1: "Crear análisis inicial"
+          session_2: "Consultar estado desde diferente sesión"
+          session_3: "Re-ejecutar análisis parcial"
+          
+          validation:
+            - "context_id preservado entre sesiones"
+            - "historial completo accesible"
+            - "relaciones entre análisis mantenidas"
+            - "timeline de eventos preservada"
+
+# ============================================================================
+# SCENARIO 2: LOGS CIENTÍFICOS DETALLADOS
+# ============================================================================
+  - name: "detailed_scientific_logging"
+    description: "Logs deben contener suficiente detalle científico para reproducibilidad"
+    priority: "critical"
+    
+    test_cases:
+      - case_id: "DSL_001"
+        name: "BLAST Invocation Scientific Logging"
+        description: "Invocación de BLAST debe generar logs científicamente completos"
+        
+        blast_logging_test:
+          request:
+            tool_name: "blast_search"
+            parameters:
+              sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+              database: "nr"
+              evalue: 1e-10
+              max_hits: 50
+        
+          required_log_entries:
+            pre_execution:
+              - "Sequence length and composition validation"
+              - "Database selection rationale"
+              - "Parameter validation and adjustments"
+              - "Cache check results"
+            
+            during_execution:
+              - "External service call timing"
+              - "Response size and structure"
+              - "Data parsing and validation"
+              - "Scientific metadata extraction"
+            
+            post_execution:
+              - "Results summary statistics"
+              - "Scientific significance assessment"
+              - "Quality control checks"
+              - "Cache storage decisions"
+            
+            scientific_metadata:
+              - "Homology confidence levels"
+              - "Taxonomic distribution analysis"
+              - "Evolutionary insights generated"
+              - "Functional prediction confidence"
+
+      - case_id: "DSL_002"
+        name: "Multi-Tool Analysis Scientific Documentation"
+        description: "Análisis multi-herramienta debe documentar decisiones científicas"
+        
+        multi_tool_documentation:
+          analysis_flow: "BLAST → UniProt → Sequence Features → LLM"
+          
+          decision_logging:
+            tool_selection:
+              - "¿Por qué se eligió cada herramienta?"
+              - "¿Qué orden de ejecución y por qué?"
+              - "¿Qué herramientas se descartaron?"
+            
+            parameter_optimization:
+              - "Parámetros ajustados automáticamente"
+              - "Razones científicas para ajustes"
+              - "Trade-offs considerados"
+            
+            result_integration:
+              - "Cómo se combinaron resultados"
+              - "Conflictos de datos y resolución"
+              - "Confianza final asignada"
+
+# ============================================================================
+# SCENARIO 3: AUDITORÍA DE INVOCACIONES DE HERRAMIENTAS
+# ============================================================================
+  - name: "tool_invocation_audit"
+    description: "Cada invocación de herramienta debe ser completamente auditable"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "TIA_001"
+        name: "Atomic Tool Invocation Audit Trail"
+        description: "Herramientas atómicas deben generar audit trail completo"
+        
+        audit_requirements:
+          per_invocation:
+            - "Unique invocation_id"
+            - "Parent context_id relationship"
+            - "Tool version information"
+            - "Complete parameter set"
+            - "Input data hash/checksum"
+            - "Execution environment details"
+            - "Resource usage metrics"
+            - "Output data characteristics"
+          
+          performance_metrics:
+            - "CPU time consumed"
+            - "Memory peak usage"
+            - "Network I/O if applicable"
+            - "Disk I/O measurements"
+            - "Cache hit/miss ratios"
+          
+          scientific_metadata:
+            - "Algorithm version used"
+            - "Reference databases/models"
+            - "Quality control results"
+            - "Confidence assessments"
+
+      - case_id: "TIA_002"
+        name: "Gateway Metrics Audit Consistency"
+        description: "Métricas del gateway deben ser auditables y consistentes"
+        
+        gateway_audit_test:
+          1. "Reset gateway metrics"
+          2. "Perform series of tool invocations"
+          3. "Query gateway metrics"
+          4. "Cross-validate with individual tool logs"
+          5. "Verify mathematical consistency"
+        
+          consistency_checks:
+            - "total_invocations suma de invocaciones individuales"
+            - "success_rate matches individual results"
+            - "tool_performance metrics consistent"
+            - "timestamps align with actual invocations"
+
+# ============================================================================
+# SCENARIO 4: LOGGING BAJO CONDICIONES EXTREMAS
+# ============================================================================
+  - name: "extreme_conditions_logging"
+    description: "Logging debe mantenerse íntegro bajo condiciones extremas"
+    priority: "high"
+    
+    test_cases:
+      - case_id: "ECL_001"
+        name: "High Volume Logging Performance"
+        description: "Logging debe mantener performance bajo alto volumen"
+        
+        high_volume_test:
+          concurrent_analyses: 20
+          tool_invocations_per_analysis: 10
+          total_expected_log_entries: ">= 200"
+          
+          performance_requirements:
+            - "Log write latency < 10ms"
+            - "No log entries lost"
+            - "Chronological ordering maintained"
+            - "No file system exhaustion"
+          
+          integrity_checks:
+            - "All context_ids have complete logs"
+            - "No partial or corrupted entries"
+            - "Timestamps are monotonic per context"
+
+      - case_id: "ECL_002"
+        name: "Error Condition Logging"
+        description: "Logging debe ser especialmente robusto durante errores"
+        
+        error_logging_scenarios:
+          - error_type: "tool_timeout"
+            required_logs:
+              - "Timeout threshold exceeded"
+              - "Partial results if any"
+              - "Recovery actions attempted"
+              - "Impact on overall analysis"
+          
+          - error_type: "invalid_input"
+            required_logs:
+              - "Input validation failure details"
+              - "Specific validation rules violated"
+              - "Suggested corrections"
+              - "Analysis termination reason"
+          
+          - error_type: "system_resource_exhaustion"
+            required_logs:
+              - "Resource limits encountered"
+              - "Current system state"
+              - "Queue management decisions"
+              - "User notification triggered"
+
+# ============================================================================
+# SCENARIO 5: REPRODUCIBILIDAD Y COMPLIANCE
+# ============================================================================
+  - name: "reproducibility_compliance"
+    description: "Logs deben permitir reproducibilidad completa y compliance científico"
+    priority: "medium"
+    
+    test_cases:
+      - case_id: "RC_001"
+        name: "Analysis Reproducibility Test"
+        description: "Logs deben contener información suficiente para reproducir análisis"
+        
+        reproducibility_test:
+          original_analysis:
+            context_id: "repro_test_001"
+            protocol: "PROTEIN_FUNCTION_ANALYSIS"
+            sequence: "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+          
+          reproduction_requirements:
+            - "Exact tool versions used"
+            - "Complete parameter sets"
+            - "Database versions/dates"
+            - "Algorithm configurations"
+            - "Random seeds if applicable"
+            - "Environment variables"
+          
+          validation:
+            - "Re-run produces identical results"
+            - "Or explains why results differ"
+            - "Scientific conclusions remain valid"
+
+      - case_id: "RC_002"
+        name: "Scientific Compliance Documentation"
+        description: "Logs deben satisfacer requisitos de compliance científico"
+        
+        compliance_requirements:
+          data_integrity:
+            - "Input data immutability proof"
+            - "Processing pipeline integrity"
+            - "Result tamper-evidence"
+          
+          methodology_documentation:
+            - "Complete methodology description"
+            - "Parameter justifications"
+            - "Quality control measures"
+            - "Limitation acknowledgments"
+          
+          audit_readiness:
+            - "External audit trail export"
+            - "Human-readable summaries"
+            - "Machine-readable data"
+            - "Compliance reporting templates"
+
+# ============================================================================
+# SCENARIO 6: LOG ANALYSIS Y INSIGHTS
+# ============================================================================
+  - name: "log_analysis_insights"
+    description: "Logs deben permitir extracción de insights operacionales y científicos"
+    priority: "low"
+    
+    test_cases:
+      - case_id: "LAI_001"
+        name: "Operational Insights Extraction"
+        description: "Logs deben permitir análisis de patrones operacionales"
+        
+        insight_categories:
+          performance_patterns:
+            - "Tool performance trends over time"
+            - "Bottlenecks in analysis pipelines"
+            - "Resource utilization patterns"
+          
+          usage_patterns:
+            - "Most common analysis types"
+            - "Peak usage times"
+            - "User behavior patterns"
+          
+          quality_patterns:
+            - "Success rate trends"
+            - "Common failure modes"
+            - "Quality degradation indicators"
+
+      - case_id: "LAI_002"
+        name: "Scientific Insights Extraction"
+        description: "Logs deben permitir meta-análisis científico"
+        
+        scientific_insights:
+          methodology_effectiveness:
+            - "¿Qué combinaciones de herramientas son más efectivas?"
+            - "¿Qué parámetros producen mejores resultados?"
+            - "¿Cómo varía la confianza con diferentes inputs?"
+          
+          data_quality_patterns:
+            - "Características de secuencias problemáticas"
+            - "Límites de aplicabilidad de herramientas"
+            - "Indicadores de resultados de alta confianza"
+
+# ============================================================================
+# VALIDATION QUERIES
+# ============================================================================
+validation_queries:
+  - name: "log_completeness_check"
+    description: "Verificar que todos los eventos esperados están loggeados"
+    query_type: "completeness"
+    
+  - name: "temporal_consistency_check"
+    description: "Verificar consistencia temporal en logs"
+    query_type: "temporal"
+    
+  - name: "scientific_metadata_validation"
+    description: "Validar completitud de metadatos científicos"
+    query_type: "scientific"
+
+# ============================================================================
+# EXECUTION SETTINGS
+# ============================================================================
+execution:
+  parallel_scenarios: false  # Sequential for proper log analysis
+  log_level_override: "DEBUG"  # Maximum logging detail
+  log_retention_period: "7 days"  # For test analysis
+  
+success_criteria:
+  log_completeness_rate: "100%"
+  traceability_score: ">= 95%"
+  audit_readiness: "100%"
+  reproducibility_rate: ">= 90%"
+
+# ============================================================================
+# REPORTING
+# ============================================================================
+reporting:
+  generate_audit_report: true
+  include_traceability_matrix: true
+  log_analysis_summary: true
+  compliance_checklist: true
+  export_formats: ["yaml", "json", "audit_pdf", "compliance_report"]
