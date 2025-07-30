@@ -278,13 +278,23 @@ scenarios:
               max_tokens: 1500
               temperature: 0.3
         
-        expected_result:
+        expected:
+          status_code: 200
           success: true
-          confidence_assessment_validation:
-            - "data_quantity assessment basado en input size"
-            - "data_sources count correcto (3/3 en este caso)"
-            - "overall_confidence coherente con cantidad/calidad datos"
-            - "confidence factors lógicamente consistentes"
+          validation:
+            - type: "json_path"
+              path: "$.results.analysis"
+              criterion:
+                type: "string_not_empty"
+            - type: "json_path"
+              path: "$.results.confidence_assessment"
+              criterion:
+                type: "string_not_empty"
+            - type: "json_path"
+              path: "$.results.data_sources"
+              criterion:
+                type: "array_length_min"
+                min: 1
 
       - case_id: "LAI_002"
         name: "Analysis Type Specific Prompts"
