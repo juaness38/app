@@ -204,24 +204,38 @@ class EmergentTestExecutor:
         if 'scientific_validation' in expected:
             await self._perform_scientific_validation(response_data, expected['scientific_validation'], result)
     
-    def _evaluate_criterion(self, criterion: str, data: Dict[str, Any]) -> bool:
-        """Evalúa un criterio simple contra los datos de respuesta"""
-        # Por ahora, implementación básica
-        # En producción, esto sería más sofisticado
+    def _evaluate_criterion(self, criterion: Dict[str, Any], data: Dict[str, Any]) -> tuple[bool, str]:
+        """Enhanced criterion evaluation using scientific validator"""
+        try:
+            # Handle different criterion formats
+            if isinstance(criterion, str):
+                # Legacy string format - convert to dict format
+                criterion_dict = {'type': 'legacy_string', 'rule': criterion}
+                return self._evaluate_legacy_criterion(criterion, data)
+            elif isinstance(criterion, dict):
+                # New enhanced format
+                return self.scientific_validator.evaluate_criterion(criterion, data)
+            else:
+                return False, f"Invalid criterion format: {type(criterion)}"
+        except Exception as e:
+            return False, f"Criterion evaluation error: {str(e)}"
+    
+    def _evaluate_legacy_criterion(self, criterion: str, data: Dict[str, Any]) -> tuple[bool, str]:
+        """Evaluate legacy string-based criteria"""
         try:
             if 'aparece en' in criterion:
                 # Ej: "blast_search aparece en top 3 recomendaciones"
-                return True  # Placeholder
+                return True, f"Legacy criterion '{criterion}' - placeholder pass"
             elif 'incluido' in criterion:
                 # Ej: "uniprot_annotations incluido si score > 0.7"
-                return True  # Placeholder
+                return True, f"Legacy criterion '{criterion}' - placeholder pass"
             elif '>=' in criterion:
                 # Ej: "Total recomendaciones >= 2"
-                return True  # Placeholder
+                return True, f"Legacy criterion '{criterion}' - placeholder pass"
             else:
-                return True  # Default pass para criterios no implementados
-        except:
-            return False
+                return True, f"Legacy criterion '{criterion}' - default pass"
+        except Exception as e:
+            return False, f"Legacy criterion error: {str(e)}"
     
     async def _perform_scientific_validation(self, data: Dict[str, Any], validation_rules: List[str], result: Dict[str, Any]):
         """Realiza validación científica específica"""
