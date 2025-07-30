@@ -39,14 +39,31 @@ scenarios:
               max_hits: 20
               evalue: 1e-10
         
-        expected_result:
+        expected:
+          status_code: 200
           success: true
-          scientific_validation:
-            raw_result:
-              - "Debe contener campo 'hits'"
-              - "Cada hit debe tener 'identity', 'evalue', 'organism'"
-              - "E-values deben ser números <= threshold"
-              - "Identity scores entre 0-100"
+          validation:
+            - type: "json_path"
+              path: "$.results"
+              criterion:
+                type: "array_length_min"
+                min: 1
+            - type: "json_path"
+              path: "$.results[0].e_value"
+              criterion:
+                type: "numeric_range"
+                biological_metric: true
+                min: 0
+                max: 1e-10
+                tolerance: 0.2
+            - type: "json_path"
+              path: "$.results[0].identity"
+              criterion:
+                type: "numeric_range"
+                biological_metric: true
+                min: 0
+                max: 100
+                tolerance: 0.1
             
             scientific_summary:
               - "total_hits >= 0"
