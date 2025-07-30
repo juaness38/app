@@ -376,12 +376,12 @@ scenarios:
                 expected: "5 should be rejected with 429"  
               - action: "Wait 1 minute"
                 expected: "Rate limit should reset"
-          
-          validation:
-            - "Rate limit headers present in responses"
-            - "429 status code for exceeded limits"
-            - "Clear error messages about rate limiting"
-            - "Proper reset mechanism"
+        
+        validation:
+          - "Rate limit headers present in responses"
+          - "429 status code for exceeded limits"
+          - "Clear error messages about rate limiting"
+          - "Proper reset mechanism"
 
       - case_id: "CRL_002"
         name: "Concurrent Analysis Processing"
