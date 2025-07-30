@@ -2,7 +2,7 @@
 
 **Execution ID:** 5f332219
 **Fecha:** 2025-07-30T17:25:31.751421
-**Backend URL:** https://251afff3-56b4-4fc5-a73c-120737cf01e1.preview.emergentagent.com
+**Backend URL:** https://7b408a56-cb1b-46fc-b3d6-b274ba0c75c5.preview.emergentagent.com
 
 ## 📊 Resumen General
 
