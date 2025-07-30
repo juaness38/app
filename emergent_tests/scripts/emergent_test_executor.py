@@ -237,27 +237,62 @@ class EmergentTestExecutor:
         except Exception as e:
             return False, f"Legacy criterion error: {str(e)}"
     
-    async def _perform_scientific_validation(self, data: Dict[str, Any], validation_rules: List[str], result: Dict[str, Any]):
-        """Realiza validación científica específica"""
+    async def _perform_scientific_validation(self, data: Dict[str, Any], validation_rules: List[Dict[str, Any]], result: Dict[str, Any]):
+        """Enhanced scientific validation with biological context"""
         scientific_results = []
+        failures = []
         
-        for rule in validation_rules:
+        for validation_rule in validation_rules:
             try:
-                # Implementar validaciones científicas específicas
+                # Extract the criterion from the validation rule
+                if isinstance(validation_rule, dict):
+                    criterion = validation_rule
+                    rule_name = validation_rule.get('type', 'unknown_rule')
+                else:
+                    # Legacy format
+                    criterion = {'type': 'legacy_string', 'rule': str(validation_rule)}
+                    rule_name = str(validation_rule)
+                
+                # Use the enhanced scientific validator
+                passed, message = self.scientific_validator.evaluate_criterion(criterion, data)
+                
                 validation_result = {
-                    'rule': rule,
-                    'passed': True,  # Placeholder
-                    'details': 'Scientific validation placeholder'
+                    'rule': rule_name,
+                    'passed': passed,
+                    'message': message,
+                    'criterion': criterion
                 }
+                
                 scientific_results.append(validation_result)
+                
+                if not passed:
+                    failures.append({
+                        'criterion': criterion,
+                        'actual_value': data,
+                        'message': message
+                    })
+                    
             except Exception as e:
-                scientific_results.append({
-                    'rule': rule,
+                error_result = {
+                    'rule': validation_rule,
                     'passed': False,
-                    'error': str(e)
+                    'error': str(e),
+                    'message': f"Validation error: {str(e)}"
+                }
+                scientific_results.append(error_result)
+                failures.append({
+                    'criterion': validation_rule,
+                    'actual_value': data,
+                    'message': f"Validation error: {str(e)}"
                 })
         
         result['scientific_validation'] = scientific_results
+        
+        # Add enhanced error reporting if there are failures
+        if failures:
+            test_case = result.get('test_case', {})
+            failure_report = self.error_reporter.generate_failure_report(test_case, failures)
+            result['failure_report'] = failure_report
     
     async def _execute_validation_test(self, test_case: Dict[str, Any], suite_context: Dict[str, Any], result: Dict[str, Any]) -> Dict[str, Any]:
         """Ejecuta test de validación sin HTTP"""
